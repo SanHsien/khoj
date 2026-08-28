@@ -1,0 +1,4 @@
+{
+  "$comment": "每月依賴檢查用：已經看過、但這次不升的決定。deferredLatest 記下當時審視的版本，PyPI 一超過它就自動恢復提醒。",
+  "deferrals": {}
+}

@@ -1,0 +1,9 @@
+{
+  "repo": "https://github.com/khoj-ai/khoj.git",
+  "branch": "master",
+  "reviewed_through": "ae229ca894c0b80ad84664afcfdde523b5e87057",
+  "reviewed_date": "2026-08-27",
+  "notes": "Fork created from upstream master ae229ca (chat export pagination fix #1314). No unmerged upstream PRs adopted. Publish workflows gated to khoj-ai/khoj.",
+  "reviewed_pr_through": 1412,
+  "reviewed_issue_through": 1415
+}
