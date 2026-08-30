@@ -83,3 +83,41 @@ commit 水位。那兩個面向不是「查過沒發現」，是根本沒查，�
 綠燈不是「沒有待辦」，是沒有人看。
 
 **觸發條件**：報告列出項目時逐筆讀 diff、把採用／略過理由寫進本檔，然後才推進 baseline 的水位。
+
+
+## 2026-08-30：上游 PR #1417 採用（本 fork 實測重現），issue #1416 無可引用內容
+
+PR 水位 1412 → 1417；issue 水位 1415 → 1416。
+
+### 採用：`FileFilter.defilter()` 沒有清掉排除型檔案過濾器（上游 PR #1417）
+
+**缺陷**：`defilter()` 只做一次 `re.sub(file_filter_regex, ...)`，而 `file_filter_regex` 帶
+`(?<!-)` 前瞻否定，刻意不匹配 `-file:"..."`。結果排除型過濾器**整段留在查詢字串裡**送進搜尋，
+過濾語法本身變成查詢詞。
+
+**在本 fork 實測重現**（載入 `src/khoj/search_filter/file_filter.py` 這支真檔，只 stub 掉與本次
+無關、會擋住 import 的 `anthropic` 與 `LRU`）：
+
+| 輸入 | 修正前 | 修正後 |
+| --- | --- | --- |
+| `head -file:"file 1.org" tail` | `head -file:"file 1.org" tail` | `head tail` |
+| `head file:"a.org" -file:"b.org" tail` | `head -file:"b.org" tail` | `head tail` |
+| `head tail` | `head tail` | `head tail` |
+
+`get_filter_terms()` 不受影響（仍回 `['a.org', '-file 1.org']`）。
+
+**為什麼是真缺陷不是設計**：同一個 repo 的 `WordFilter.defilter` 本來就同時移除 required 與
+blocked 兩種詞，`FileFilter` 只做一半是不一致。兩條 substitution 因為 `(?<!-)` 而彼此獨立，
+順序無關。
+
+**測試**：`tests/test_file_filter.py` 加一條涵蓋四種輸入。注意那份是**產品測試**，不在
+`tools/dev_check.ps1` 的 fork gate（gate 只跑 `tools/tests`），而且本機缺 `anthropic` 跑不起來
+——所以另外用上面那個載入真檔的方式實跑驗證過，不是只靠推理。
+
+### 不引用：issue #1416
+
+內容是**設定寫法說明**：自架 Khoj 要建兩筆 admin 資料（AI Model API 的 `api_base_url` 指到
+`/v1` 根、Chat Model 的 `model_type` 選 `Openai`），並附一份 YAML 範例。沒有回報缺陷、也沒有
+要求程式改動——是上游 admin UI 的使用說明。本 fork 沒有對應可引用的變更。
+
+**觸發條件**：這個 issue 之後若轉成「某某設定組合在程式裡會壞」的缺陷回報，再重評。

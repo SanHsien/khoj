@@ -2,8 +2,8 @@
   "repo": "https://github.com/khoj-ai/khoj.git",
   "branch": "master",
   "reviewed_through": "ae229ca894c0b80ad84664afcfdde523b5e87057",
-  "reviewed_date": "2026-08-27",
-  "notes": "Fork created from upstream master ae229ca (chat export pagination fix #1314). No unmerged upstream PRs adopted. Publish workflows gated to khoj-ai/khoj.",
-  "reviewed_pr_through": 1412,
-  "reviewed_issue_through": 1415
+  "reviewed_date": "2026-08-30",
+  "notes": "Fork created from upstream master ae229ca (chat export pagination fix #1314). No unmerged upstream PRs adopted. Publish workflows gated to khoj-ai/khoj. 2026-08-30：PR 水位 1412 → 1417、issue 1415 → 1416。#1417（defilter 沒清掉 -file: 排除過濾器）在本 fork 實測重現後採用；issue #1416 是設定寫法說明、無可引用的程式變更。理由與實測表見 docs/DECISIONS.md 同日條目。",
+  "reviewed_pr_through": 1417,
+  "reviewed_issue_through": 1416
 }

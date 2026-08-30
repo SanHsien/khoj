@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -157,7 +158,14 @@ def test_baseline_file_is_valid_and_complete() -> None:
     assert baseline["branch"] == "master"
     assert len(baseline["reviewed_through"]) == 40
     assert baseline["reviewed_through"] == "ae229ca894c0b80ad84664afcfdde523b5e87057"
-    assert baseline["reviewed_date"] == "2026-08-27"
+    # The date is pinned as a shape, not as a literal. A hardcoded date turns
+    # every legitimate upstream review into a test failure, and the pressure is
+    # then to edit the test rather than to record the review.
+    assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", baseline["reviewed_date"])
+    # All four axes carry a number. Zero is legitimate -- it means the axis was
+    # queried and was empty -- so presence and type are what get pinned.
+    assert isinstance(baseline["reviewed_pr_through"], int)
+    assert isinstance(baseline["reviewed_issue_through"], int)
 
 
 def test_workflow_is_scheduled_and_fails_on_unreviewed_commits() -> None:

@@ -132,6 +132,22 @@ def test_get_multiple_include_exclude_file_filter_terms():
     assert filter_terms == ["file 1.org", "/path/to/dir/.*.org", "-file 1.org", "-/path/to/dir/*.org"]
 
 
+def test_defilter_strips_both_include_and_exclude_file_filters():
+    # An exclude filter used to survive defilter() and reach the search text, so
+    # `-file:"a.org"` was searched for verbatim -- the filter syntax itself
+    # became query terms. WordFilter.defilter already removed both required and
+    # blocked terms; this makes FileFilter match.
+
+    # Arrange
+    file_filter = FileFilter()
+
+    # Act / Assert
+    assert file_filter.defilter("head tail") == "head tail"
+    assert file_filter.defilter('head file:"a.org" tail') == "head tail"
+    assert file_filter.defilter('head -file:"file 1.org" tail') == "head tail"
+    assert file_filter.defilter('head file:"a.org" -file:"b.org" tail') == "head tail"
+
+
 def arrange_content():
     entries = [
         Entry(compiled="", raw="First Entry", file="file 1.org"),
