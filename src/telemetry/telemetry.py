@@ -9,6 +9,8 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from posthog import Posthog
 
+from khoj.utils.security import sanitize_log_value
+
 # Initialize Global App Variables
 app = FastAPI()
 sqlfile = "data/khoj.sqlite"
@@ -37,7 +39,10 @@ def v1_telemetry(telemetry_data: List[Dict[str, str]]):
         )
 
     # Insert received telemetry data into SQLite db
-    logger.info(f"Insert row into telemetry table at {sqlfile}: {telemetry_data}")
+    logger.info(
+        f"Insert row into telemetry table at {sanitize_log_value(sqlfile)}: "
+        f"{sanitize_log_value(telemetry_data)}"
+    )
     with sqlite3.connect(sqlfile) as conn:
         cur = conn.cursor()
 

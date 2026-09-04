@@ -80,6 +80,7 @@ from khoj.routers.helpers import (
 from khoj.routers.research import ResearchIteration, research
 from khoj.routers.storage import upload_user_image_to_bucket
 from khoj.utils import state
+from khoj.utils.security import sanitize_log_value
 from khoj.utils.helpers import (
     ConversationCommand,
     clean_text_for_db,
@@ -163,7 +164,10 @@ def add_files_filter(request: Request, filter: FilesFilterRequest):
         file_filters = ConversationAdapters.add_files_to_filter(request.user.object, conversation_id, files_filter)
         return Response(content=json.dumps(file_filters), media_type="application/json", status_code=200)
     except Exception as e:
-        logger.error(f"Error adding file filter {filter.filenames}: {e}", exc_info=True)
+        logger.error(
+            f"Error adding file filter {sanitize_log_value(filter.filenames)}: {sanitize_log_value(e)}",
+            exc_info=True,
+        )
         raise HTTPException(status_code=422, detail=str(e))
 
 
@@ -176,7 +180,10 @@ def add_file_filter(request: Request, filter: FileFilterRequest):
         file_filters = ConversationAdapters.add_files_to_filter(request.user.object, conversation_id, files_filter)
         return Response(content=json.dumps(file_filters), media_type="application/json", status_code=200)
     except Exception as e:
-        logger.error(f"Error adding file filter {filter.filename}: {e}", exc_info=True)
+        logger.error(
+            f"Error adding file filter {sanitize_log_value(filter.filename)}: {sanitize_log_value(e)}",
+            exc_info=True,
+        )
         raise HTTPException(status_code=422, detail=str(e))
 
 
@@ -1534,7 +1541,9 @@ async def chat_ws(
                     # Send interrupt signal to the ongoing task
                     await interrupt_queue.put(data.get("query") or ChatEvent.END_EVENT.value)
                     logger.info(
-                        f"Interrupt signal sent to ongoing task for user {websocket.scope['user'].object.id} with query: {data.get('query')}"
+                        "Interrupt signal sent to ongoing task for user "
+                        f"{sanitize_log_value(websocket.scope['user'].object.id)} with query: "
+                        f"{sanitize_log_value(data.get('query'))}"
                     )
                     if data.get("query"):
                         ack_type = "interrupt_message_acknowledged"

@@ -11,6 +11,7 @@ from dateutil.relativedelta import relativedelta
 
 from khoj.search_filter.base_filter import BaseFilter
 from khoj.utils.helpers import LRU, merge_dicts, timer
+from khoj.utils.security import sanitize_log_value
 
 logger = logging.getLogger(__name__)
 
@@ -186,7 +187,10 @@ class DateFilter(BaseFilter):
         try:
             parsed_date = dtparse.parse(clean_date_str, settings=dtparser_settings)
         except Exception as e:
-            logger.error(f"Failed to parse date string: {date_str} with error: {e}")
+            logger.error(
+                f"Failed to parse date string: {sanitize_log_value(date_str)} "
+                f"with error: {sanitize_log_value(e)}"
+            )
             return None
 
         if parsed_date is None:

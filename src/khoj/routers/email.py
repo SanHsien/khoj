@@ -5,9 +5,10 @@ from urllib.parse import quote
 import markdown_it
 import resend
 from django.conf import settings
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from khoj.utils.helpers import is_none_or_empty
+from khoj.utils.security import sanitize_log_value
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,10 @@ RESEND_AUDIENCE_ID = os.getenv("RESEND_AUDIENCE_ID")
 
 static_files = os.path.join(settings.BASE_DIR, "static")
 
-env = Environment(loader=FileSystemLoader(static_files))
+env = Environment(
+    loader=FileSystemLoader(static_files),
+    autoescape=select_autoescape(enabled_extensions=("html", "xml"), default_for_string=True),
+)
 
 if not RESEND_API_KEY:
     logger.warning("RESEND_API_KEY not set - email sending disabled")
@@ -84,10 +88,14 @@ async def send_welcome_email(name, email):
 
 async def send_query_feedback(uquery, kquery, sentiment, user_email):
     if not is_resend_enabled():
-        logger.debug(f"Sentiment: {sentiment}, Query: {uquery}, Khoj Response: {kquery}")
+        logger.debug(
+            f"Sentiment: {sanitize_log_value(sentiment)}, "
+            f"Query: {sanitize_log_value(uquery)}, "
+            f"Khoj Response: {sanitize_log_value(kquery)}"
+        )
         return
 
-    logger.info(f"Sending feedback email for query {uquery}")
+    logger.info(f"Sending feedback email for query {sanitize_log_value(uquery)}")
 
     # render feedback email using feedback.html as template
     template = env.get_template("feedback.html")

@@ -44,6 +44,7 @@ from khoj.utils.helpers import (
     merge_dicts,
 )
 from khoj.utils.rawconfig import FileAttachment
+from khoj.utils.security import sanitize_log_value
 from khoj.utils.yaml import yaml_dump
 
 logger = logging.getLogger(__name__)
@@ -623,12 +624,14 @@ async def save_to_conversation_log(
         merge_message_into_conversation_trace(q, chat_response, tracer)
 
     logger.info(
-        f"""
+        sanitize_log_value(
+            f"""
 Saved Conversation Turn ({db_conversation.id if db_conversation else "N/A"}):
 You ({user.username}): "{q}"
 
 Khoj: "{chat_response}"
 """.strip()
+        )
     )
 
 
@@ -1239,10 +1242,16 @@ Metadata
         # Delete message branch after merge
         repo.delete_head(msg_branch, force=True)
 
-        logger.debug(f"Successfully merged {msg_branch} into {conv_branch}")
+        logger.debug(
+            f"Successfully merged {sanitize_log_value(msg_branch)} into {sanitize_log_value(conv_branch)}"
+        )
         return True
     except Exception as e:
-        logger.error(f"Failed to merge message {msg_branch} into conversation {conv_branch}: {str(e)}", exc_info=True)
+        logger.error(
+            f"Failed to merge message {sanitize_log_value(msg_branch)} into conversation "
+            f"{sanitize_log_value(conv_branch)}: {sanitize_log_value(e)}",
+            exc_info=True,
+        )
         return False
 
 
