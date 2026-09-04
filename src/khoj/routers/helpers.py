@@ -117,6 +117,7 @@ from khoj.search_filter.file_filter import FileFilter
 from khoj.search_filter.word_filter import WordFilter
 from khoj.search_type import text_search
 from khoj.utils import state
+from khoj.utils.security import sanitize_log_value
 from khoj.utils.helpers import (
     LRU,
     ConversationCommand,
@@ -354,7 +355,10 @@ async def acheck_if_safe_prompt(system_prompt: str, user: KhojUser = None, lax: 
             logger.error(f"Invalid response for checking safe prompt: {response}")
 
     if not is_safe:
-        logger.error(f"Unsafe prompt: {system_prompt}. Reason: {reason}")
+        logger.error(
+            f"Unsafe prompt: {sanitize_log_value(system_prompt)}. "
+            f"Reason: {sanitize_log_value(reason)}"
+        )
 
     return is_safe, reason
 
@@ -606,12 +610,16 @@ async def generate_online_subqueries(
         response = {q.strip() for q in response["queries"] if q.strip()}
         if not isinstance(response, set) or not response or len(response) == 0:
             logger.error(
-                f"Invalid response for constructing online subqueries: {response}. Returning original query: {q}"
+                "Invalid response for constructing online subqueries: "
+                f"{sanitize_log_value(response)}. Returning original query: {sanitize_log_value(q)}"
             )
             return {q}
         return response
     except Exception:
-        logger.error(f"Invalid response for constructing online subqueries: {response}. Returning original query: {q}")
+        logger.error(
+            "Invalid response for constructing online subqueries: "
+            f"{sanitize_log_value(response)}. Returning original query: {sanitize_log_value(q)}"
+        )
         return {q}
 
 
@@ -1336,7 +1344,7 @@ async def search_documents(
 
     filters_in_query += " ".join([f'file:"{filter}"' for filter in conversation.file_filters])
     if is_none_or_empty(filters_in_query):
-        logger.debug(f"Filters in query: {filters_in_query}")
+        logger.debug(f"Filters in query: {sanitize_log_value(filters_in_query)}")
 
     personality_context = prompts.personality_context.format(personality=agent.personality) if agent else ""
 
@@ -2655,7 +2663,10 @@ def schedule_automation(
     try:
         user_timezone = pytz.timezone(timezone)
     except pytz.UnknownTimeZoneError:
-        logger.warning(f"Invalid timezone: {timezone}. Fallback to use UTC to schedule automation.")
+        logger.warning(
+            f"Invalid timezone: {sanitize_log_value(timezone)}. "
+            "Fallback to use UTC to schedule automation."
+        )
         user_timezone = pytz.utc
 
     trigger = CronTrigger.from_crontab(crontime, user_timezone)
@@ -3020,7 +3031,7 @@ def configure_content(
         t = state.SearchType(t)
 
     if t is not None and t.value not in [type.value for type in state.SearchType]:
-        logger.warning(f"🚨 Invalid search type: {t}")
+        logger.warning(f"🚨 Invalid search type: {sanitize_log_value(t)}")
         return False
 
     search_type = t.value if t else None

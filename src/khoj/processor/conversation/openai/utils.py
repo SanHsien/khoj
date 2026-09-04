@@ -49,6 +49,7 @@ from khoj.utils.helpers import (
     is_none_or_empty,
     is_promptrace_enabled,
 )
+from khoj.utils.security import is_exact_https_host
 
 logger = logging.getLogger(__name__)
 
@@ -912,7 +913,7 @@ def is_groq_api(api_base_url: str | None = None) -> bool:
     """
     Check if the model is served over the Groq API
     """
-    return api_base_url is not None and api_base_url.startswith("https://api.groq.com")
+    return is_exact_https_host(api_base_url, "api.groq.com")
 
 
 def is_instream_thinking_model(model_name: str) -> bool:

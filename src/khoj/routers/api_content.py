@@ -40,6 +40,7 @@ from khoj.routers.helpers import (
 )
 from khoj.utils import state
 from khoj.utils.rawconfig import GithubContentConfig, NotionContentConfig
+from khoj.utils.security import sanitize_log_value
 from khoj.utils.state import SearchType
 
 logger = logging.getLogger(__name__)
@@ -484,7 +485,8 @@ async def convert_documents(
 
         if file_size > MAX_FILE_SIZE_BYTES:
             logger.warning(
-                f"Skipped converting oversized file ({file_size / 1024 / 1024:.1f}MB) sent by {client} client: {file.filename}"
+                f"Skipped converting oversized file ({file_size / 1024 / 1024:.1f}MB) sent by "
+                f"{sanitize_log_value(client)} client: {sanitize_log_value(file.filename)}"
             )
             continue
 
@@ -529,7 +531,10 @@ async def convert_documents(
                 }
             )
         else:
-            logger.warning(f"Skipped converting unsupported file type sent by {client} client: {file.filename}")
+            logger.warning(
+                f"Skipped converting unsupported file type sent by {sanitize_log_value(client)} client: "
+                f"{sanitize_log_value(file.filename)}"
+            )
 
     update_telemetry_state(
         request=request,
@@ -562,7 +567,7 @@ async def indexer(
         "docx": {},
     }
     try:
-        logger.info(f"📬 Updating content index via API call by {client} client")
+        logger.info(f"📬 Updating content index via API call by {sanitize_log_value(client)} client")
         for file in files:
             file_data = get_file_content(file)
             if file_data.file_type in index_files:
@@ -570,7 +575,10 @@ async def indexer(
                     file_data.content.decode(file_data.encoding) if file_data.encoding else file_data.content
                 )
             else:
-                logger.debug(f"Skipped indexing unsupported file type sent by {client} client: {file_data.name}")
+                logger.debug(
+                    f"Skipped indexing unsupported file type sent by {sanitize_log_value(client)} client: "
+                    f"{sanitize_log_value(file_data.name)}"
+                )
 
         indexer_input = IndexerInput(
             org=index_files["org"],
@@ -592,11 +600,19 @@ async def indexer(
         )
         if not success:
             raise RuntimeError(f"Failed to {method} {t} data sent by {client} client into content index")
-        logger.info(f"Finished {method} {t} data sent by {client} client into content index")
+        logger.info(
+            f"Finished {sanitize_log_value(method)} {sanitize_log_value(t)} data sent by "
+            f"{sanitize_log_value(client)} client into content index"
+        )
     except Exception as e:
-        logger.error(f"Failed to {method} {t} data sent by {client} client into content index: {e}", exc_info=True)
         logger.error(
-            f"🚨 Failed to {method} {t} data sent by {client} client into content index: {e}",
+            f"Failed to {sanitize_log_value(method)} {sanitize_log_value(t)} data sent by "
+            f"{sanitize_log_value(client)} client into content index: {sanitize_log_value(e)}",
+            exc_info=True,
+        )
+        logger.error(
+            f"🚨 Failed to {sanitize_log_value(method)} {sanitize_log_value(t)} data sent by "
+            f"{sanitize_log_value(client)} client into content index: {sanitize_log_value(e)}",
             exc_info=True,
         )
         return Response(content="Failed", status_code=500)
@@ -621,7 +637,7 @@ async def indexer(
         metadata=indexing_metadata,
     )
 
-    logger.info(f"📪 Content index updated via API call by {client} client")
+    logger.info(f"📪 Content index updated via API call by {sanitize_log_value(client)} client")
 
     indexed_filenames = ",".join(file for ctype in index_files for file in index_files[ctype]) or ""
     return Response(content=indexed_filenames, status_code=200)

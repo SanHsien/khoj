@@ -74,6 +74,7 @@ from khoj.search_filter.date_filter import DateFilter
 from khoj.search_filter.file_filter import FileFilter
 from khoj.search_filter.word_filter import WordFilter
 from khoj.utils import state
+from khoj.utils.security import sanitize_log_value
 from khoj.utils.helpers import (
     clean_object_for_db,
     clean_text_for_db,
@@ -246,7 +247,7 @@ async def aget_or_create_user_by_email(input_email: str, check_deliverability=Fa
     email, is_valid_email = normalize_email(input_email, check_deliverability=check_deliverability)
     is_existing_user = await KhojUser.objects.filter(email=email).aexists()
     if not is_existing_user and not is_valid_email:
-        logger.error(f"Account creation failed. Invalid email address: {email}")
+        logger.error(f"Account creation failed. Invalid email address: {sanitize_log_value(email)}")
         return None, False
 
     # Get/create user based on email address

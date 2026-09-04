@@ -16,6 +16,7 @@ from khoj.database.models import KhojUser
 from khoj.processor.conversation.utils import clean_json
 from khoj.routers.helpers import schedule_automation, schedule_query
 from khoj.utils.helpers import is_none_or_empty
+from khoj.utils.security import sanitize_log_value
 
 # Initialize Router
 api_automation = APIRouter()
@@ -107,7 +108,11 @@ def post_automation(
             query_to_run, subject, crontime, timezone, q, user, calling_url, str(conversation.id)
         )
     except Exception as e:
-        logger.error(f"Error creating automation {q} for {user.email}: {e}", exc_info=True)
+        logger.error(
+            f"Error creating automation {sanitize_log_value(q)} for "
+            f"{sanitize_log_value(user.email)}: {sanitize_log_value(e)}",
+            exc_info=True,
+        )
         return Response(
             content="Unable to create automation. Ensure the automation doesn't already exist.",
             media_type="text/plain",
@@ -133,7 +138,11 @@ def trigger_manual_job(
     try:
         automation: Job = AutomationAdapters.get_automation(user, automation_id)
     except ValueError as e:
-        logger.error(f"Error triggering automation {automation_id} for {user.email}: {e}", exc_info=True)
+        logger.error(
+            f"Error triggering automation {sanitize_log_value(automation_id)} for "
+            f"{sanitize_log_value(user.email)}: {sanitize_log_value(e)}",
+            exc_info=True,
+        )
         return Response(content="Invalid automation", status_code=403)
 
     # Trigger the job without waiting for the result.
@@ -171,7 +180,11 @@ def edit_job(
     try:
         automation: Job = AutomationAdapters.get_automation(user, automation_id)
     except ValueError as e:
-        logger.error(f"Error editing automation {automation_id} for {user.email}: {e}", exc_info=True)
+        logger.error(
+            f"Error editing automation {sanitize_log_value(automation_id)} for "
+            f"{sanitize_log_value(user.email)}: {sanitize_log_value(e)}",
+            exc_info=True,
+        )
         return Response(content="Invalid automation", status_code=403)
 
     # Infer subject, query to run
