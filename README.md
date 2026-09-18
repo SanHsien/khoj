@@ -29,8 +29,6 @@
 <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
 [🌐 官網](https://khoj.dev)
 <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-[🔥 雲端試用](https://app.khoj.dev)
-<span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
 [💬 Discord](https://discord.gg/BDgyabRM6e)
 <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
 [✍ 部落格](https://blog.khoj.dev)
@@ -46,7 +44,7 @@ Khoj 直接讀取本機文件與筆記，可在斷網環境用 Ollama 等開源�
 - 從瀏覽器、Obsidian、Emacs、桌面、手機或 WhatsApp 使用。
 - 自訂 Agent：知識庫、人設、模型與工具。
 - 語意搜尋、排程研究、圖片生成與語音。
-- 永遠開源、可自託管。隱私優先時走本機；也可以用上游的[雲端服務](https://app.khoj.dev)。
+- 永遠開源、可自託管。資料與隱私完全保留在本機與私有伺服器。
 
 產品使用方式以上游文件為準：<https://docs.khoj.dev>。
 

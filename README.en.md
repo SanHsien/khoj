@@ -29,8 +29,6 @@
 <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
 [🌐 Web](https://khoj.dev)
 <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-[🔥 App](https://app.khoj.dev)
-<span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
 [💬 Discord](https://discord.gg/BDgyabRM6e)
 <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
 [✍🏽 Blog](https://blog.khoj.dev)
@@ -59,15 +57,13 @@
 - Find relevant docs quickly and easily using our advanced semantic search.
 - Generate images, talk out loud, play your messages.
 - Khoj is open-source, self-hostable. Always.
-- Run it privately on [your computer](https://docs.khoj.dev/get-started/setup) or try it on our [cloud app](https://app.khoj.dev).
+- Run it privately on [your computer](https://docs.khoj.dev/get-started/setup) with complete data ownership.
 
 ***
 
 ## See it in action
 
 ![demo_chat](https://github.com/khoj-ai/khoj/blob/master/documentation/assets/img/quadratic_equation_khoj_web.gif?raw=true)
-
-Go to https://app.khoj.dev to see Khoj live.
 
 ## Full feature list
 You can see the full feature list [here](https://docs.khoj.dev/category/features).
@@ -92,15 +88,7 @@ pwsh -NoProfile -File tools\bootstrap_dev.ps1
 
 That installs maintenance tools only (not torch / Django) and runs the Windows gate. See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) and [`AGENTS.md`](AGENTS.md).
 
-## Enterprise
-
-Khoj is available as a cloud service, on-premises, or as a hybrid solution. To learn more about Khoj Enterprise, [visit our website](https://khoj.dev/teams).
-
 ## Frequently Asked Questions (FAQ)
-
-Q: Can I use Khoj without self-hosting?
-
-Yes! You can use Khoj right away at [https://app.khoj.dev](https://app.khoj.dev) — no setup required.
 
 Q: What kinds of documents can Khoj read?
 

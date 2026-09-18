@@ -121,3 +121,14 @@ blocked 兩種詞，`FileFilter` 只做一半是不一致。兩條 substitution 
 要求程式改動——是上游 admin UI 的使用說明。本 fork 沒有對應可引用的變更。
 
 **觸發條件**：這個 issue 之後若轉成「某某設定組合在程式裡會壞」的缺陷回報，再重評。
+
+## 2026-09-19：移除替上游收費服務廣告與外部付費導流
+
+**決定**：全面清除非必要之上游商業收費服務宣傳與導流連結。
+
+1. **文件層面（`README.md`、`README.en.md`）**：移除頂部「🔥 雲端試用（`app.khoj.dev`）」按鈕、內文推廣上游付費雲端的文案，以及推銷 Enterprise 收費商業方案（`khoj.dev/teams`）的章節，維持純粹的開源與自託管定位。
+2. **首頁與介面層面（`src/khoj/interface/web/home/index.html`）**：移除首頁的 `Khoj Cloud` 宣傳橫幅、導覽列的 `Pricing` 連結，以及包含 Stripe 刷卡連結（`buy.stripe.com`）的定價方案區塊（Humanist / Futurist 付費卡片）。
+3. **導覽選單（`src/interface/web/app/components/navMenu/navMenu.tsx`）**：移除導向 `https://khoj.dev/teams` 商業版頁面的選單項目與未使用的圖標引用。
+4. **限額與客戶端提示（`src/khoj/routers/helpers.py`、`src/interface/desktop/`）**：將 API 請求超限或同步超額時誘導至 `https://app.khoj.dev/settings#subscription` 訂閱升級的文案，替換為中性的本機/伺服器容量與配額提示。
+
+**理由**：本倉庫為純開源自託管的維護型 fork，自架用戶不應在本地或私有環境使用時看到替上游收費服務推廣、促銷定價或外連至 Stripe 付費的廣告內容。

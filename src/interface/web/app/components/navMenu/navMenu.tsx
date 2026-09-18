@@ -19,7 +19,6 @@ import {
     Question,
     ArrowRight,
     Code,
-    BuildingOffice,
 } from "@phosphor-icons/react";
 import { useIsDarkMode, useIsMobileWidth } from "@/app/common/utils";
 import LoginPrompt from "../loginPrompt/loginPrompt";
@@ -71,11 +70,6 @@ export default function FooterMenu({ sideBarIsOpen }: NavMenuProps) {
             title: "Releases",
             icon: <Code className="w-6 h-6" />,
             link: "https://github.com/khoj-ai/khoj/releases",
-        },
-        {
-            title: "Teams",
-            icon: <BuildingOffice className="w-6 h-6" />,
-            link: "https://khoj.dev/teams",
         },
     ];
 

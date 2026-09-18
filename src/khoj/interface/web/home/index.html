@@ -13,32 +13,6 @@
     <link rel="icon" href="/home/favicon.png" type="image/png">
 </head>
 <body>
-    <!-- Deprecation Banner -->
-    <div id="deprecation-banner" style="display:none; width:100%; padding:8px 16px; background:rgba(234,88,12,0.9); text-align:center; font-size:14px; color:#fff7ed; position:fixed; top:0; left:0; right:0; z-index:1100;">
-        <span style="margin-right:8px;">&#9888;</span>
-        <strong>Khoj Cloud is being deprecated on April 15, 2026.</strong>
-        Please <a href="/settings#account" style="color:white; font-weight:500; text-decoration:underline;">export your data</a> before then.
-        To continue using Khoj, you can <a href="https://docs.khoj.dev/get-started/setup" target="_blank" rel="noopener noreferrer" style="color:white; font-weight:500; text-decoration:underline;">self-host it</a>.
-        <button onclick="dismissDeprecationBanner()" style="margin-left:8px; background:none; border:none; color:#fff7ed; cursor:pointer; font-size:16px;" aria-label="Dismiss banner">&times;</button>
-    </div>
-    <script>
-        function dismissDeprecationBanner() {
-            localStorage.setItem('khoj-cloud-deprecation-dismissed', 'true');
-            document.getElementById('deprecation-banner').style.display = 'none';
-            document.querySelector('.navbar').style.top = '0';
-            document.body.style.paddingTop = '0';
-        }
-        if (localStorage.getItem('khoj-cloud-deprecation-dismissed') !== 'true') {
-            var banner = document.getElementById('deprecation-banner');
-            banner.style.display = 'block';
-            requestAnimationFrame(function() {
-                var bannerHeight = banner.offsetHeight + 'px';
-                document.querySelector('.navbar').style.top = bannerHeight;
-                document.body.style.paddingTop = bannerHeight;
-            });
-        }
-    </script>
-
     <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
@@ -47,7 +21,6 @@
             </a>
             <div class="nav-links">
                 <a href="https://docs.khoj.dev/" class="nav-link">Docs</a>
-                <a href="#pricing" class="nav-link">Pricing</a>
                 <a href="#downloads" class="nav-link">Download</a>
                 <a href="https://github.com/khoj-ai/khoj" class="nav-link">GitHub</a>
             </div>
@@ -356,41 +329,6 @@
                 </svg>
                 <span class="access-name">Emacs</span>
             </a>
-        </div>
-    </section>
-
-    <!-- Pricing Section -->
-    <section class="pricing" id="pricing">
-        <h2 class="pricing-title">Pricing</h2>
-        <div class="pricing-cards">
-            <div class="pricing-card humanist">
-                <h4 class="plan-name">Humanist</h4>
-                <div class="plan-price">
-                    <span class="price">$0</span>
-                    <span class="period">p/month</span>
-                </div>
-                <ul class="plan-features">
-                    <li>Chat with free AI models</li>
-                    <li>10MB data upload</li>
-                    <li>Unlimited conversations</li>
-                    <li>Shareable conversations</li>
-                </ul>
-                <a href="/?v=app" class="plan-btn outline">Get Started</a>
-            </div>
-            <div class="pricing-card futurist">
-                <h4 class="plan-name">Futurist</h4>
-                <div class="plan-price">
-                    <span class="price">$30</span>
-                    <span class="period">p/month</span>
-                </div>
-                <ul class="plan-features">
-                    <li>Chat with any AI model</li>
-                    <li>500MB data upload</li>
-                    <li>Longer context windows</li>
-                    <li>All of the Humanist plan</li>
-                </ul>
-                <a href="https://buy.stripe.com/28ocQb7kb4iD0cEdQQ" class="plan-btn filled">Get Started</a>
-            </div>
         </div>
     </section>
 
