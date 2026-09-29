@@ -10,7 +10,7 @@
   "main": "main.js",
   "private": false,
   "devDependencies": {
-    "electron": "39.8.5"
+    "electron": "39.8.10"
   },
   "scripts": {
     "start": "yarn electron ."
@@ -23,6 +23,10 @@
   },
   "resolutions": {
     "ajv": "^8.18.0",
-    "picomatch": ">=2.3.2"
+    "picomatch": ">=2.3.2",
+    "fast-uri": "^3.1.6",
+    "brace-expansion": "^1.1.18",
+    "builder-util-runtime": "^9.7.0",
+    "js-yaml": "^4.3.2"
   }
 }

@@ -23,7 +23,7 @@
         "@typescript-eslint/eslint-plugin": "7.13.1",
         "@typescript-eslint/parser": "7.13.1",
         "builtin-modules": "3.3.0",
-        "esbuild": "0.14.47",
+        "esbuild": "^0.25.0",
         "obsidian": "^1.6.6",
         "tslib": "2.4.0",
         "typescript": "4.7.4"
@@ -33,6 +33,9 @@
         "isomorphic-dompurify": "^2.25.0"
     },
     "resolutions": {
-        "picomatch": ">=2.3.2"
+        "picomatch": ">=2.3.2",
+        "dompurify": "^3.4.13",
+        "undici": "^7.29.1",
+        "brace-expansion": "^2.1.2"
     }
 }

@@ -132,3 +132,31 @@ blocked 兩種詞，`FileFilter` 只做一半是不一致。兩條 substitution 
 4. **限額與客戶端提示（`src/khoj/routers/helpers.py`、`src/interface/desktop/`）**：將 API 請求超限或同步超額時誘導至 `https://app.khoj.dev/settings#subscription` 訂閱升級的文案，替換為中性的本機/伺服器容量與配額提示。
 
 **理由**：本倉庫為純開源自託管的維護型 fork，自架用戶不應在本地或私有環境使用時看到替上游收費服務推廣、促銷定價或外連至 Stripe 付費的廣告內容。
+
+## 2026-09-29：依賴安全升級
+
+**已升級**（除 `esbuild` 為 0.x 破壞性小版升級外，都不跨主版）：
+
+- 網頁：`next`／`eslint-config-next` 15.5.24，`bun run build` 通過。
+- Obsidian 外掛：`esbuild` 0.14 → 0.25（`esbuild.config.mjs` 改用 `context().watch()`），
+  resolutions 鎖 `undici ^7.29.1`、`dompurify ^3.4.13`、`brace-expansion ^2.1.2`；`yarn build` 通過。
+- 桌面：`electron` 39.8.10，resolutions 鎖 `fast-uri ^3.1.6`、`brace-expansion ^1.1.18`、`builder-util-runtime ^9.7.0`、
+  `js-yaml ^4.3.2`。只驗過 `electron-updater`、`js-yaml`、`minimatch` 可載入；Electron 本體未在本機實際啟動。
+- 文件站：`yarn upgrade` 在既有範圍內刷新鎖檔，另鎖 `uuid ^11.1.1`（`sockjs` 只用 `v4()`）；`docusaurus build` 通過。
+- Python：`mcp` 1.30.0、`soupsieve` 2.10（`uv lock --upgrade-package`）。`mcp` 已在隔離環境確認
+  `processor/tools/mcp.py` 用到的 API 仍在。
+
+resolutions 一律用 `^` 限在依賴方要求的主版內：`>=` 會把 `undici`、`brace-expansion` 拉到下一個
+主版，建置照過，但執行期會壞。
+
+**延後**（被 `pyproject.toml` 的固定版本或依賴上限擋住，上游也一樣）：
+
+| 套件 | 現在 | 修補版 | 延後原因 |
+| --- | --- | --- | --- |
+| `torch` | 2.6.0（`== 2.6.0`） | 2.13.0；部分漏洞無修補版 | 跨 7 個小版且綁 `sentence-transformers == 3.4.1`，要實跑伺服器與 embedding 才能驗 |
+| `transformers` | 4.53.3 | 5.10.0 | 主版升級；`sentence-transformers == 3.4.1` 要求 `transformers <5`，兩者要一起升 |
+| `langchain`／`langchain-core`／`langchain-text-splitters` | 0.3.x | 1.x | 主版升級，`langchain-community == 0.3.31` 也要一起動 |
+| `langsmith` | 0.8.5 | 0.8.18 | 本身只是小版更新，但要把 `websockets == 13.0` 升到 15；khoj 未直接使用 `langsmith`，漏洞在 `TracingMiddleware` |
+| `extract-zip`（桌面） | 2.0.1 | 無修補版 | 只在 `electron` 安裝時使用 |
+
+**觸發條件**：上游升這些版本、或能在本機用 Docker 實跑伺服器與 embedding 測試時，整組一起升。
