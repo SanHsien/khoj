@@ -9,6 +9,11 @@ updates:
       timezone: "Asia/Taipei"
     open-pull-requests-limit: 5
     labels: ["dependencies", "python"]
+    # Keep the reviewed 0.3.x LangChain family until the server and embedding
+    # paths can be tested together; see docs/DECISIONS.md (2026-09-29).
+    ignore:
+      - dependency-name: "langchain-text-splitters"
+        versions: [">=1.0.0"]
     groups:
       development-dependencies:
         dependency-type: "development"
