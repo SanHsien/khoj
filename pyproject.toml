@@ -68,7 +68,7 @@ dependencies = [
     "authlib == 1.6.12",
     "itsdangerous == 2.1.2",
     "httpx == 0.28.1",
-    "pgvector == 0.2.4",
+    "pgvector == 0.2.5",
     "psycopg2-binary == 2.9.13",
     "lxml == 6.1.0",
     "tzdata == 2026.4",
