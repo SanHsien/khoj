@@ -61,7 +61,7 @@ dependencies = [
     "langchain-text-splitters == 0.3.11",
     "langchain-community == 0.3.31",
     "requests >= 2.33.0",
-    "anyio>=4.8,<4.15",
+    "anyio>=4.8,<4.16",
     "pymupdf == 1.24.11",
     "django==5.2.16",
     "django-unfold == 0.42.0",
