@@ -47,6 +47,8 @@ updates:
         versions: [">=0.6.0"]
       - dependency-name: "openai"
         versions: [">=3.0.0"]
+      - dependency-name: "websockets"
+        versions: [">=14.0"]
       - dependency-name: "anthropic"
         versions: [">=0.76.0"]
       - dependency-name: "django-unfold"
