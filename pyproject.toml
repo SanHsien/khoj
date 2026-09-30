@@ -82,7 +82,7 @@ dependencies = [
     "psutil >= 5.8.0",
     "huggingface-hub[hf_xet] >= 0.22.2",
     "apscheduler >= 3.10,< 3.12",
-    "pytz ~= 2024.1",
+    "pytz >= 2024.1,< 2027.0",
     "cron-descriptor == 1.4.3",
     "django_apscheduler == 0.7.0",
     "anthropic == 0.75.0",
