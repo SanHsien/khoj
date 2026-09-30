@@ -17,8 +17,6 @@ updates:
       # Held majors, see docs/DECISIONS.md (2026-09-30): no product tests run here.
       - dependency-name: "pyjson5"
         versions: [">=2.0.0"]
-      - dependency-name: "magika"
-        versions: [">=1.0.0"]
       - dependency-name: "gunicorn"
         update-types: ["version-update:semver-major"]
       - dependency-name: "stripe"
@@ -33,6 +31,22 @@ updates:
         versions: [">=4.0.0"]
       - dependency-name: "pgvector"
         versions: [">=0.3.0"]
+      - dependency-name: "torch"
+        versions: [">=2.7.0"]
+      - dependency-name: "transformers"
+        versions: [">=5.0.0"]
+      - dependency-name: "langchain"
+        versions: [">=1.0.0"]
+      - dependency-name: "langchain-core"
+        versions: [">=1.0.0"]
+      - dependency-name: "langchain-community"
+        versions: [">=0.4.0"]
+      - dependency-name: "langsmith"
+        versions: [">=0.8.6"]
+      - dependency-name: "magika"
+        versions: [">=0.6.0"]
+      - dependency-name: "openai"
+        versions: [">=3.0.0"]
       - dependency-name: "anthropic"
         versions: [">=0.76.0"]
       - dependency-name: "django-unfold"

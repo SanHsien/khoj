@@ -165,7 +165,7 @@ resolutions 一律用 `^` 限在依賴方要求的主版內：`>=` 會把 `undic
 
 **已採用**：GitHub Actions 群組（#23，只改 workflow 版本）、`tzdata` 2026.4（#19，純時區資料）、
 `stripe` 7.14、`twilio` 8.13、`pytest-django` 4.14、`email-validator` 2.3（#24、#27，小版，`uv.lock` 同步）、
-`beautifulsoup4`／`anyio` 範圍放寬（#38、#35）、`pytest-asyncio` 0.21.2（#34）、`einops` 0.8.2、`pytz` 放寬到 `<2027`（#33、#30）、
+`pyjson5` 1.6.9、`psycopg2-binary` 2.9.13（#44、#41，補丁）、`beautifulsoup4`／`anyio` 範圍放寬（#38、#35）、`pytest-asyncio` 0.21.2（#34）、`einops` 0.8.2、`pytz` 放寬到 `<2027`（#33、#30）、
 `apscheduler` 放寬到 `>=3.10,<3.12`（#20，`uv.lock` 同步到 3.11.3；3.11 不再依賴 `pytz`／`six`，
 `pytz` 已在 `pyproject.toml` 直接宣告，並在隔離環境確認 `BackgroundScheduler`＋`CronTrigger` 可用）。
 #19、#20 因 Dependabot 只改 `pyproject.toml`，不含 `uv.lock`，改為直接提交含鎖檔的版本。
@@ -182,6 +182,9 @@ resolutions 一律用 `^` 限在依賴方要求的主版內：`>=` 會把 `undic
 | `resend` | 1.2 → 2.48（#26） | 主版，只在寄信路徑，無測試覆蓋 | 需要寄信功能時實測 |
 | `django-unfold` | 0.42.0 → 0.81.0（#37） | 0.x 跨近 40 個小版，管理後台樣板與設定可能變動，無測試覆蓋 | 可實跑管理後台時 |
 | `anthropic` | 0.75 → 0.125（#36） | 同上列，跨版過大且無測試覆蓋 | 同上 |
+| `magika` | 0.5.1 → 0.6.x（#42，取代前述 1.x 提案） | 0.x 小版也換模型與輸出，檔案匯入判斷需比對 | 實跑檔案匯入並比對偵測結果 |
+| `openai` | `<3` → `<4`（#39） | 範圍放寬納入 3.x 主版，無測試覆蓋 | 有產品測試時 |
+| `torch`／`langchain-community` 等 | #43、#40 | 沿用 2026-09-29 延後項（torch、langchain 家族、langsmith），Dependabot 已加 `ignore` | 見 2026-09-29 觸發條件 |
 | `django-phonenumber-field` | 7.3 → 8.5（#25） | 主版，與 Django 模型欄位／遷移有關，需實跑遷移驗證 | 可用 Docker 實跑伺服器與遷移時 |
 | `sentence-transformers` | 3.4.1 → 6.1.0（#31） | 主版，與 `torch`／`transformers` 延後項綁在一起 | 隨 torch／transformers 一起升 |
 | `markdown-it-py` | `~=3.0.0` → `<4.3`（#32） | 範圍放寬納入 4.x 主版，無測試覆蓋 | 有產品測試時 |
