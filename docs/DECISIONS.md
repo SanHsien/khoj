@@ -165,6 +165,7 @@ resolutions 一律用 `^` 限在依賴方要求的主版內：`>=` 會把 `undic
 
 **已採用**：GitHub Actions 群組（#23，只改 workflow 版本）、`tzdata` 2026.4（#19，純時區資料）、
 `stripe` 7.14、`twilio` 8.13、`pytest-django` 4.14、`email-validator` 2.3（#24、#27，小版，`uv.lock` 同步）、
+`einops` 0.8.2、`pytz` 放寬到 `<2027`（#33、#30）、
 `apscheduler` 放寬到 `>=3.10,<3.12`（#20，`uv.lock` 同步到 3.11.3；3.11 不再依賴 `pytz`／`six`，
 `pytz` 已在 `pyproject.toml` 直接宣告，並在隔離環境確認 `BackgroundScheduler`＋`CronTrigger` 可用）。
 #19、#20 因 Dependabot 只改 `pyproject.toml`，不含 `uv.lock`，改為直接提交含鎖檔的版本。
@@ -180,5 +181,8 @@ resolutions 一律用 `^` 限在依賴方要求的主版內：`>=` 會把 `undic
 | `anthropic` | 0.75 → 1.8（#28） | 主版，Anthropic 呼叫路徑無測試覆蓋 | 有產品測試或可實呼叫 API 驗證 |
 | `resend` | 1.2 → 2.48（#26） | 主版，只在寄信路徑，無測試覆蓋 | 需要寄信功能時實測 |
 | `django-phonenumber-field` | 7.3 → 8.5（#25） | 主版，與 Django 模型欄位／遷移有關，需實跑遷移驗證 | 可用 Docker 實跑伺服器與遷移時 |
+| `sentence-transformers` | 3.4.1 → 6.1.0（#31） | 主版，與 `torch`／`transformers` 延後項綁在一起 | 隨 torch／transformers 一起升 |
+| `markdown-it-py` | `~=3.0.0` → `<4.3`（#32） | 範圍放寬納入 4.x 主版，無測試覆蓋 | 有產品測試時 |
+| `pgvector` | 0.2.4 → 0.5.0（#29） | 0.x 多個小版，向量型別與 psycopg2 介面可能變動，需實跑資料庫 | 可用 Docker 實跑 Postgres 時 |
 
 Dependabot 已對上述主版加 `ignore`（`semver-major`），避免重複開 PR。
