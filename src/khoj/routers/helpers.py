@@ -790,6 +790,7 @@ async def generate_summary_from_files(
             yield response_log
             return
 
+        file_objects = file_objects or []
         contextual_data = " ".join([f"File: {file.file_name}\n\n{file.raw_text}" for file in file_objects])
 
         if query_files:
@@ -806,8 +807,9 @@ async def generate_summary_from_files(
         for file_name in file_names:
             all_file_names += f"- {file_name}\n"
 
-        async for result in send_status_func(f"**Constructing Summary Using:**\n{all_file_names}"):
-            yield {ChatEvent.STATUS: result}
+        if send_status_func:
+            async for result in send_status_func(f"**Constructing Summary Using:**\n{all_file_names}"):
+                yield {ChatEvent.STATUS: result}
 
         response = await extract_relevant_summary(
             q,
@@ -823,7 +825,7 @@ async def generate_summary_from_files(
     except Exception as e:
         response_log = "Error summarizing file. Please try again, or contact support."
         logger.error(f"Error summarizing file for {user.email}: {e}", exc_info=True)
-        yield result
+        yield response_log
 
 
 async def generate_excalidraw_diagram(
@@ -3328,6 +3330,8 @@ async def grep_files(
         db_pattern = re.sub(r"\(\?\w*\)", "", db_pattern)  # Remove inline flags like (?i), (?m), (?im)
         db_pattern = re.sub(r"^\^", "", db_pattern)  # Remove ^ at regex pattern start
         db_pattern = re.sub(r"\$$", "", db_pattern)  # Remove $ at regex pattern end
+        # Remove word boundaries (\b, \B). Postgres reads \b as a backspace, so it would match no files
+        db_pattern = re.sub(r"\\.", lambda m: "" if m.group(0) in (r"\b", r"\B") else m.group(0), db_pattern)
 
         file_matches = await FileObjectAdapters.aget_file_objects_by_regex(user, db_pattern, path_prefix)
 

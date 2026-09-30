@@ -194,3 +194,39 @@ resolutions 一律用 `^` 限在依賴方要求的主版內：`>=` 會把 `undic
 | `pgvector` | 0.2.4 → 0.5.0（#29） | 0.x 多個小版，向量型別與 psycopg2 介面可能變動，需實跑資料庫 | 可用 Docker 實跑 Postgres 時 |
 
 Dependabot 已對上述主版加 `ignore`（`semver-major`），避免重複開 PR。
+
+## 2026-09-30：上游審查（commit 無新增；PR 1417 → 1444；issue 1416 → 1439）
+
+上游 `master` 仍在 `ae229ca`，無新提交。14 筆 PR 與 7 筆 issue 全部未合併（PR 皆 OPEN；issue 1422、1431 已關閉）。本 fork 不跑產品測試，只採用小而自成一體、能在本機驗證的修正。
+
+### 採用（3 筆，皆為本 fork 檔案中實際存在的缺陷）
+
+| PR | 變更 | 本 fork 證據 | 驗證 |
+| --- | --- | --- | --- |
+| #1443 | `api_chat.py`：`elif event_type == REFERENCES or METADATA or stream` 改為 `in (...)`（1 行） | `src/khoj/routers/api_chat.py` 原為 `== ChatEvent.REFERENCES or ChatEvent.METADATA or stream`，恆為真 | `py_compile` |
+| #1444 | `helpers.py` `generate_summary_from_files`：`file_objects or []`、`send_status_func` 判空、例外分支 `yield result` 改 `yield response_log`（+5/-3） | 原檔例外分支 `yield result`，`result` 未綁定即 `UnboundLocalError`；`file_objects=None` 且有 `query_files` 時迭代 `None` | `py_compile` |
+| #1441 | `helpers.py` grep 前處理移除 `\b`／`\B`（+4）與一筆測試 | Postgres 把 `\b` 當 backspace，`\bword\b` 永遠不匹配 | 抽出 `re.sub` 表達式實測：`\bsailing\b` → `sailing`、`a\Bb\d` → `ab\d`、`\\b` 不動；`py_compile` |
+
+以 `gh pr diff` 套用（PR 尚未合併，無上游 SHA 可 `cherry-pick -x`）。#1441 的 Postgres 端到端測試在本 fork 不會執行。
+觸發條件：上游合併後若內容有異，於下一輪對照。
+
+### 採用待辦（adoption pending）
+
+| 項目 | 原因 | 觸發條件 |
+| --- | --- | --- |
+| #1424（PDF 暫存檔在 Windows 無法重開，+114/-7） | 動 PDF 索引路徑，需實跑 PDF 匯入才能驗；無產品測試 | 有產品測試環境，或上游合併 |
+| #1430（工具選擇 fallback 崩潰，+42/-4） | 動聊天路由，需 agent 設定與資料庫 | 同上 |
+| #1432（inline HTML 文字，+191/-7） | 動 HTML／網頁讀取，行為變更範圍大 | 同上 |
+| #1440／#1437（markdown 標題無文字時卡住） | 動索引切分，需以長筆記實測 | 同上 |
+| #1442／#1439（operator 拿到最近對話輪次） | 行為變更，需 operator 環境 | 同上 |
+
+### 跟隨上游／不適用
+
+| 項目 | 判斷 |
+| --- | --- |
+| #1418（Gandr TTS）、#1419／#1427（llmman、API Route 提供者命名）、#1425（Ollama 健康檢查）、#1435／#1434（Superfast Decision Gate，預設關閉） | follow-upstream：新功能或第三方服務整合，非缺陷修正 |
+| #1426（搜尋查詢清理測試） | follow-upstream：僅新增上游測試 |
+| issue #1421、#1422、#1431 | not-applicable：分析文章、新手詢問、社群指南（已關閉） |
+| issue #1438 | 已由 #1441 採用 |
+
+PR 水位 1417 → 1444；issue 水位 1416 → 1439。
