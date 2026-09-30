@@ -688,15 +688,15 @@ wheels = [
 
 [[package]]
 name = "email-validator"
-version = "2.2.0"
+version = "2.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dnspython" },
     { name = "idna" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/48/ce/13508a1ec3f8bb981ae4ca79ea40384becc868bfae97fd1c942bb3a001b1/email_validator-2.2.0.tar.gz", hash = "sha256:cb690f344c617a714f22e66ae771445a1ceb46821152df8e165c5f9a364582b7", size = 48967, upload-time = "2024-06-20T11:30:30.034Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f5/22/900cb125c76b7aaa450ce02fd727f452243f2e91a61af068b40adba60ea9/email_validator-2.3.0.tar.gz", hash = "sha256:9fc05c37f2f6cf439ff414f8fc46d917929974a82244c20eb10231ba60c54426", size = 51238, upload-time = "2025-08-26T13:09:06.831Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d7/ee/bf0adb559ad3c786f12bcbc9296b3f5675f529199bef03e2df281fa1fadb/email_validator-2.2.0-py3-none-any.whl", hash = "sha256:561977c2d73ce3611850a06fa56b414621e0c8faa9d66f2611407d87465da631", size = 33521, upload-time = "2024-06-20T11:30:28.248Z" },
+    { url = "https://files.pythonhosted.org/packages/de/15/545e2b6cf2e3be84bc1ed85613edd75b8aea69807a71c26f4ca6a9258e82/email_validator-2.3.0-py3-none-any.whl", hash = "sha256:80f13f623413e6b197ae73bb10bf4eb0908faf509ad8362c5edeb0be7fd450b4", size = 35604, upload-time = "2025-08-26T13:09:05.858Z" },
 ]
 
 [[package]]
@@ -1346,7 +1346,7 @@ requires-dist = [
     { name = "docx2txt", specifier = "==0.8" },
     { name = "e2b-code-interpreter", specifier = "~=1.0.0" },
     { name = "einops", specifier = "==0.8.0" },
-    { name = "email-validator", specifier = "==2.2.0" },
+    { name = "email-validator", specifier = "==2.3.0" },
     { name = "factory-boy", marker = "extra == 'dev'", specifier = ">=3.2.1" },
     { name = "fastapi", specifier = ">=0.110.0" },
     { name = "freezegun", marker = "extra == 'dev'", specifier = ">=1.2.0" },
@@ -1384,7 +1384,7 @@ requires-dist = [
     { name = "pymupdf", specifier = "==1.24.11" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.1.2" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = "==0.21.1" },
-    { name = "pytest-django", marker = "extra == 'dev'", specifier = "==4.5.2" },
+    { name = "pytest-django", marker = "extra == 'dev'", specifier = "==4.14.0" },
     { name = "pytest-xdist", extras = ["psutil"], marker = "extra == 'dev'" },
     { name = "python-multipart", specifier = ">=0.0.31" },
     { name = "pytz", specifier = "~=2024.1" },
@@ -1396,14 +1396,14 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.12.0" },
     { name = "schedule", specifier = "==1.1.0" },
     { name = "sentence-transformers", specifier = "==3.4.1" },
-    { name = "stripe", marker = "extra == 'dev'", specifier = "==7.3.0" },
-    { name = "stripe", marker = "extra == 'prod'", specifier = "==7.3.0" },
+    { name = "stripe", marker = "extra == 'dev'", specifier = "==7.14.0" },
+    { name = "stripe", marker = "extra == 'prod'", specifier = "==7.14.0" },
     { name = "tenacity", specifier = ">=9.0.0" },
     { name = "tiktoken", specifier = ">=0.3.2" },
     { name = "torch", specifier = "==2.6.0" },
     { name = "transformers", specifier = ">=4.53.0" },
-    { name = "twilio", marker = "extra == 'dev'", specifier = "==8.11" },
-    { name = "twilio", marker = "extra == 'prod'", specifier = "==8.11" },
+    { name = "twilio", marker = "extra == 'dev'", specifier = "==8.13.0" },
+    { name = "twilio", marker = "extra == 'prod'", specifier = "==8.13.0" },
     { name = "tzdata", specifier = "==2026.4" },
     { name = "uvicorn", specifier = ">=0.31.1" },
     { name = "websockets", specifier = "==13.0" },
@@ -2846,14 +2846,14 @@ wheels = [
 
 [[package]]
 name = "pytest-django"
-version = "4.5.2"
+version = "4.14.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pytest" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9b/42/6d6563165b82289d4a30ea477f85c04386303e51cf4e4e4651d4f9910830/pytest-django-4.5.2.tar.gz", hash = "sha256:d9076f759bb7c36939dbdd5ae6633c18edfc2902d1a69fdbefd2426b970ce6c2", size = 79949, upload-time = "2021-12-07T14:26:58.991Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/44/f6/3851312120c2bf2f19cafff931e75059aad1ba670703cd751e2fde9bc942/pytest_django-4.14.0.tar.gz", hash = "sha256:26787dd3f422cfbab8f55b80a776e2edea7a11092cb74e960bef1312515708ef", size = 94700, upload-time = "2026-08-10T14:13:08.319Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4b/21/b65ecd6686da400e2f6e3c49c2a428325abd979c9670cd97e1671f53296e/pytest_django-4.5.2-py3-none-any.whl", hash = "sha256:c60834861933773109334fe5a53e83d1ef4828f2203a1d6a0fa9972f4f75ab3e", size = 20752, upload-time = "2021-12-07T14:26:57.714Z" },
+    { url = "https://files.pythonhosted.org/packages/9c/03/850bffad2b581c440ca51c039d74504d5a422c94bda0bdb8a8ba5068d48b/pytest_django-4.14.0-py3-none-any.whl", hash = "sha256:c533b08d89cc675efcd5398eea270b34547e35f9a3608e2c9748dd88428ea187", size = 27067, upload-time = "2026-08-10T14:13:06.998Z" },
 ]
 
 [[package]]
@@ -3487,15 +3487,15 @@ wheels = [
 
 [[package]]
 name = "stripe"
-version = "7.3.0"
+version = "7.14.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "requests" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9e/c2/489365b9c6ee7a2a33c873a6f964d8a3d310fb08e8c5ca46148c7255f7f2/stripe-7.3.0.tar.gz", hash = "sha256:4288d180cf63a60cb4803282830f862a8954e45207eb6e1d0870171b15234c94", size = 745559, upload-time = "2023-11-02T22:37:18.483Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f2/b2/f0e2f0ff27d852817da0964a1f50796932a0c1fcdb48aecc3bb95ae91701/stripe-7.14.0.tar.gz", hash = "sha256:556bfa86f8b298b666ff2caa0d754ee19ece52159d12a45ed7ddb02daadd1799", size = 793052, upload-time = "2024-01-25T17:14:57.365Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b8/f9/8c9e4f36056eec7f44c8a5b8c99a3aa7c5b895184269fd860a872ce90626/stripe-7.3.0-py2.py3-none-any.whl", hash = "sha256:77bd0c3020ef7a5f3005127152898f6aabfe6056d11f1175902c50158911e332", size = 803603, upload-time = "2023-11-02T22:37:15.142Z" },
+    { url = "https://files.pythonhosted.org/packages/03/78/48d087bd5d17ee71fb95c8b241e84128ef7a6da62e88fc2435844163b474/stripe-7.14.0-py2.py3-none-any.whl", hash = "sha256:f39def4dec42b374a39b110ab809c8130e14b7027ee40e3111a658e0f46709cb", size = 903446, upload-time = "2024-01-25T17:14:53.241Z" },
 ]
 
 [[package]]
@@ -3709,7 +3709,7 @@ wheels = [
 
 [[package]]
 name = "twilio"
-version = "8.11.0"
+version = "8.13.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -3717,9 +3717,9 @@ dependencies = [
     { name = "pyjwt" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/cb/28/6f388815418f4ec1b1d8a6283c98ef20a4b0af04556c49fe9338238d7656/twilio-8.11.0.tar.gz", hash = "sha256:792509da936c4f47d9fa7071d5f1f3bdc9314aaf96225bac4f0ef28f8688a95b", size = 923451, upload-time = "2023-12-14T10:50:22.589Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/81/2e/b4185b9ee9faffb65813e1cdefb23bf55a584f57adeff967ab6b0243b0f8/twilio-8.13.0.tar.gz", hash = "sha256:89f629fa280b51bc21cd58b35cf640f9bbf88efd3977c0c5ec6ea6821b9880cd", size = 891474, upload-time = "2024-02-09T12:31:51.157Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e1/8e/6c4abc9d3368b4ca24f74ef8cb8c4db1c26e734f7f477e6eb18b9dc030b5/twilio-8.11.0-py2.py3-none-any.whl", hash = "sha256:90fd47f220e597163020d3755a81aed76fd217e116ab36fd241d9bf48d1a0a18", size = 1765786, upload-time = "2023-12-14T10:50:19.025Z" },
+    { url = "https://files.pythonhosted.org/packages/cf/22/88e3dfbbc1ccabaa58b0e20d4c29ae03d0877040eb4a03143bbec318f23e/twilio-8.13.0-py2.py3-none-any.whl", hash = "sha256:f5396e355de11b80c6729bd286fdc0e12c9c0b025c465f16f090034a7ef88d3d", size = 1689264, upload-time = "2024-02-09T12:31:48.118Z" },
 ]
 
 [[package]]

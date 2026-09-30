@@ -26,6 +26,12 @@ updates:
       - dependency-name: "twilio"
         update-types: ["version-update:semver-major"]
       - dependency-name: "pytest-asyncio"
+        versions: [">=0.22.0"]
+      - dependency-name: "anthropic"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "resend"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "django-phonenumber-field"
         update-types: ["version-update:semver-major"]
     groups:
       development-dependencies:
