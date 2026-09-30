@@ -160,3 +160,20 @@ resolutions 一律用 `^` 限在依賴方要求的主版內：`>=` 會把 `undic
 | `extract-zip`（桌面） | 2.0.1 | 無修補版 | 只在 `electron` 安裝時使用 |
 
 **觸發條件**：上游升這些版本、或能在本機用 Docker 實跑伺服器與 embedding 測試時，整組一起升。
+
+## 2026-09-30：依賴 PR #18–#23 收尾
+
+**已採用**：GitHub Actions 群組（#23，只改 workflow 版本）、`tzdata` 2026.4（#19，純時區資料）、
+`apscheduler` 放寬到 `>=3.10,<3.12`（#20，`uv.lock` 同步到 3.11.3；3.11 不再依賴 `pytz`／`six`，
+`pytz` 已在 `pyproject.toml` 直接宣告，並在隔離環境確認 `BackgroundScheduler`＋`CronTrigger` 可用）。
+#19、#20 因 Dependabot 只改 `pyproject.toml`，不含 `uv.lock`，改為直接提交含鎖檔的版本。
+
+**延後**：
+
+| 套件 | 提案 | 延後原因 | 觸發條件 |
+| --- | --- | --- | --- |
+| `pyjson5` | 1.6.7 → 2.0.1（#22） | 主版升級，`processor` 解析 LLM 輸出用到，沒有產品測試覆蓋 | 有產品測試或本機實跑伺服器可驗 JSON5 解析 |
+| `magika` | `~=0.5.1` → `<1.1.0`（#21） | 範圍放寬會納入 1.0.x，模型與執行期改版，檔案類型判斷行為可能變動 | 實跑檔案匯入並比對 1.x 偵測結果 |
+| `gunicorn`／`stripe`／`twilio`／`pytest-asyncio`（`prod`／`dev` extras） | 22→26、7→15、8→9、0.21→1.4（#18） | 四個都是主版，`stripe`／`twilio` 只在託管服務路徑，`pytest-asyncio` 1.x 改變 event loop 設定；本 fork 不跑產品測試 | 逐一升級並在有產品測試環境驗證 |
+
+Dependabot 已對上述主版加 `ignore`（`semver-major`），避免重複開 PR。
