@@ -23,10 +23,10 @@ jobs:
         shell: bash
         working-directory: src/interface/obsidian
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
       - name: Install Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v7
         with:
           node-version: "lts/*"
 
@@ -36,28 +36,28 @@ jobs:
           yarn run build --if-present
 
       - name: ⏫ Upload Obsidian Plugin main.js
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           if-no-files-found: error
           name: main.js
           path: src/interface/obsidian/main.js
 
       - name: ⏫ Upload Obsidian Plugin manifest.json
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           if-no-files-found: error
           name: manifest.json
           path: src/interface/obsidian/manifest.json
 
       - name: ⏫ Upload Obsidian Plugin styles.css
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           if-no-files-found: error
           name: styles.css
           path: src/interface/obsidian/styles.css
 
       - name: 🌈 Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         if: startsWith(github.ref, 'refs/tags/')
         with:
           generate_release_notes: true
