@@ -185,6 +185,8 @@ resolutions 一律用 `^` 限在依賴方要求的主版內：`>=` 會把 `undic
 | `magika` | 0.5.1 → 0.6.x（#42，取代前述 1.x 提案） | 0.x 小版也換模型與輸出，檔案匯入判斷需比對 | 實跑檔案匯入並比對偵測結果 |
 | `openai` | `<3` → `<4`（#39） | 範圍放寬納入 3.x 主版，無測試覆蓋 | 有產品測試時 |
 | `torch`／`langchain-community` 等 | #43、#40 | 沿用 2026-09-29 延後項（torch、langchain 家族、langsmith），Dependabot 已加 `ignore` | 見 2026-09-29 觸發條件 |
+| `markdownify` | `~=0.14.1` → `<1.3`（#50） | 範圍放寬納入 1.x 主版，HTML 轉 Markdown 輸出可能變動，無測試覆蓋 | 有產品測試時 |
+| `cron-descriptor` | 1.4.3 → 2.1.0（#49） | 主版，與 `django-apscheduler == 0.7.0` 一起使用，需實跑排程頁 | 實跑排程管理頁時 |
 | `websockets` | 13.0 → 16.1.1（#46） | 主版；與 2026-09-29 延後的 `langsmith` 同一組（`websockets == 13.0` 是刻意釘住），需一起驗證 | 隨 langsmith 升級一起處理 |
 | `django-phonenumber-field` | 7.3 → 8.5（#25） | 主版，與 Django 模型欄位／遷移有關，需實跑遷移驗證 | 可用 Docker 實跑伺服器與遷移時 |
 | `sentence-transformers` | 3.4.1 → 6.1.0（#31） | 主版，與 `torch`／`transformers` 延後項綁在一起 | 隨 torch／transformers 一起升 |

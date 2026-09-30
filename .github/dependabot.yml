@@ -49,6 +49,10 @@ updates:
         versions: [">=3.0.0"]
       - dependency-name: "websockets"
         versions: [">=14.0"]
+      - dependency-name: "markdownify"
+        versions: [">=1.0.0"]
+      - dependency-name: "cron-descriptor"
+        versions: [">=2.0.0"]
       - dependency-name: "anthropic"
         versions: [">=0.76.0"]
       - dependency-name: "django-unfold"
