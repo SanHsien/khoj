@@ -89,7 +89,7 @@ dependencies = [
     "docx2txt == 0.8",
     "google-genai == 1.52.0",
     "google-auth ~= 2.23.3",
-    "pyjson5 == 1.6.7",
+    "pyjson5 == 2.0.1",
     "resend == 1.2.0",
     "email-validator == 2.2.0",
     "e2b-code-interpreter ~= 1.0.0",
