@@ -63,9 +63,15 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "django-phonenumber-field"
         update-types: ["version-update:semver-major"]
+    # Minor and patch updates arrive as one PR per group; with one PR per
+    # package the 5-PR limit refilled faster than the backlog could be reviewed.
+    # Majors stay separate so each can be judged on its own.
     groups:
       development-dependencies:
         dependency-type: "development"
+      production-minor-and-patch:
+        dependency-type: "production"
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
