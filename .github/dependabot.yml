@@ -34,6 +34,10 @@ updates:
       - dependency-name: "pgvector"
         versions: [">=0.3.0"]
       - dependency-name: "anthropic"
+        versions: [">=0.76.0"]
+      - dependency-name: "django-unfold"
+        versions: [">=0.43.0"]
+      - dependency-name: "anthropic"
         update-types: ["version-update:semver-major"]
       - dependency-name: "resend"
         update-types: ["version-update:semver-major"]
