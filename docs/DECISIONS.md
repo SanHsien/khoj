@@ -239,6 +239,8 @@ PR #54（桌面 `axios` 1.20.0，修復 11 筆 Axios 漏洞）、PR #55（`pyjwt
 - Obsidian 外掛：resolutions 鎖定 `moment ^2.31.0`，修復 Alert #206 路徑周遊漏洞；`esbuild` production build 通過。
 - Python 鎖檔（`uv.lock`）：
   - `urllib3` 2.7.0 → 2.8.0，修復 3 筆 urllib3 漏洞（Alert #230–#232）。
+  - `virtualenv` 20.38.0 → 21.14.2，修復 Alert #242 與 #243。
+  - `gitpython` 3.1.59 → 3.1.62，修復 Alert #236、#237、#238、#240。
 - Python 生產相依（`pyproject.toml` 與 `uv.lock` 同步）：
   - PR #58（小版與修補版）：`schedule` 1.2.2、`pymupdf` 1.28.2、`authlib` 1.8.0、`itsdangerous` 2.2.0、`pgvector` 0.2.5、`lxml` 6.1.3、`websockets` 13.1、`cron-descriptor` 1.4.5。
   - PR #59：`e2b-code-interpreter` 範圍放寬至 `>=1.0,<2.11`。
