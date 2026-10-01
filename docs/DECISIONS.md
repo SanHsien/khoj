@@ -230,3 +230,19 @@ Dependabot 已對上述主版加 `ignore`（`semver-major`），避免重複開 
 | issue #1438 | 已由 #1441 採用 |
 
 PR 水位 1417 → 1444；issue 水位 1416 → 1439。
+
+## 2026-10-01：依賴安全升級與 Dependabot PR #54–#59 採用
+
+PR #54（桌面 `axios` 1.20.0，修復 11 筆 Axios 漏洞）、PR #55（`pyjwt` 2.15.0，修復 11 筆 PyJWT 漏洞）、PR #56（`click <8.5.1`）已直接合併進 `main`。
+
+**本提交採用**：
+- Obsidian 外掛：resolutions 鎖定 `moment ^2.31.0`，修復 Alert #206 路徑周遊漏洞；`esbuild` production build 通過。
+- Python 鎖檔（`uv.lock`）：
+  - `urllib3` 2.7.0 → 2.8.0，修復 3 筆 urllib3 漏洞（Alert #230–#232）。
+- Python 生產相依（`pyproject.toml` 與 `uv.lock` 同步）：
+  - PR #58（小版與修補版）：`schedule` 1.2.2、`pymupdf` 1.28.2、`authlib` 1.8.0、`itsdangerous` 2.2.0、`pgvector` 0.2.5、`lxml` 6.1.3、`websockets` 13.1、`cron-descriptor` 1.4.5。
+  - PR #59：`e2b-code-interpreter` 範圍放寬至 `>=1.0,<2.11`。
+
+**延後**：
+- PR #60：`phonenumbers` 8.13.27 → 9.0.40（跨主版，受 `django-phonenumber-field == 7.3.0` 綁定，待後續整體 Django 欄位遷移驗證時一併評估）。
+

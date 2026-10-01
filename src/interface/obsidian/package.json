@@ -36,6 +36,7 @@
         "picomatch": ">=2.3.2",
         "dompurify": "^3.4.13",
         "undici": "^7.29.1",
-        "brace-expansion": "^2.1.2"
+        "brace-expansion": "^2.1.2",
+        "moment": "^2.31.0"
     }
 }
