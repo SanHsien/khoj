@@ -88,7 +88,7 @@ dependencies = [
     "anthropic == 0.75.0",
     "docx2txt == 0.9",
     "google-genai == 1.52.0",
-    "google-auth >= 2.23.3,< 2.59.0",
+    "google-auth >= 2.23.3,< 2.60.0",
     "pyjson5 == 1.6.9",
     "resend == 1.2.0",
     "email-validator == 2.3.0",
