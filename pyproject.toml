@@ -75,7 +75,7 @@ dependencies = [
     "rapidocr-onnxruntime == 1.4.4",
     "openai-whisper >= 20231117",
     "django-phonenumber-field == 7.3.0",
-    "phonenumbers == 8.13.27",
+    "phonenumbers == 8.13.55",
     "markdownify ~= 0.14.1",
     "markdown-it-py ~= 3.0.0",
     "websockets == 13.1",
