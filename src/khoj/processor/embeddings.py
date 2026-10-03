@@ -127,7 +127,7 @@ class CrossEncoderModel:
         self.api_key = cross_encoder_inference_endpoint_api_key
         self.model_kwargs = merge_dicts(model_kwargs, {"device": get_device()})
         with timer(f"Loaded cross-encoder model {self.model_name}", logger):
-            self.cross_encoder_model = CrossEncoder(model_name=self.model_name, **self.model_kwargs)
+            self.cross_encoder_model = CrossEncoder(model_name_or_path=self.model_name, **self.model_kwargs)
 
     def inference_server_enabled(self) -> bool:
         return self.api_key is not None and self.inference_endpoint is not None
@@ -142,5 +142,5 @@ class CrossEncoderModel:
             return response.json()["scores"]
 
         cross_inp = [[query, hit.additional[key]] for hit in hits]
-        cross_scores = self.cross_encoder_model.predict(cross_inp, activation_fct=nn.Sigmoid())
+        cross_scores = self.cross_encoder_model.predict(cross_inp, activation_fn=nn.Sigmoid())
         return cross_scores

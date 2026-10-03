@@ -248,3 +248,11 @@ PR #54（桌面 `axios` 1.20.0，修復 11 筆 Axios 漏洞）、PR #55（`pyjwt
 **延後**：
 - PR #60：`phonenumbers` 8.13.27 → 9.0.40（跨主版，受 `django-phonenumber-field == 7.3.0` 綁定，待後續整體 Django 欄位遷移驗證時一併評估）。
 
+## 2026-10-03：修正 sentence-transformers 本機模型載入風險
+
+PR #61 提議升至 5.6.0，雖符合 Dependabot 警報 #234、#235 標示的首個修補版本，但實測遭竄改的本機模型 `modules.json` 仍可在 `trust_remote_code=False` 下執行自訂 Python 模組。本 fork 因此改採 `sentence-transformers == 6.1.0`，並將 `transformers` 下限設為本輪實測的 5.18.0（排除 GHSA-29pf-2h5f-8g72 所述低於 5.3.0 的版本）；`torch == 2.6.0` 暫不變。
+
+隔離 Python 3.12 環境的完整依賴安裝、Khoj 查詢／文件 embedding 與本機微型 reranker 均通過。Windows 維護 gate 使用系統 Python 3.14 執行，38 個測試通過。6.1.0 對相同惡意 `modules.json` 拋出 `ValueError`，未執行自訂模組。同步改用新版 `CrossEncoder` 的 `model_name_or_path` 與 `activation_fn` 參數。未跑需要 Postgres 與外部模型的完整 `tests/test_text_search.py`；其餘 `torch` 安全負債仍須另外處理。
+
+Dependabot 對這兩個套件改為只延後下一個主版的一般版本 PR，安全更新仍可提出；不再封鎖目前 5.x／6.x 系列的修補版。
+
