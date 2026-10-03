@@ -892,15 +892,15 @@ wheels = [
 
 [[package]]
 name = "google-auth"
-version = "2.58.1"
+version = "2.59.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
     { name = "pyasn1-modules" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/52/aa/8055c583f8eb69dd4544f0d6a83e22d2f01ab38bd2ce848ea599c259a2d2/google_auth-2.58.1.tar.gz", hash = "sha256:1480461d8b2347e679af758f4003700ea79a59b603c9134e18bfa95e8004ee70", size = 380459, upload-time = "2026-09-24T21:52:00.171Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/81/e3/9f752a968e487fbc10b2c2a1dd561b62489f923972911009577bb88fe7bb/google_auth-2.59.1.tar.gz", hash = "sha256:ce50fc533ac02f489a2b183a0c156672c376ecb2091b1127bc7efba2975fff27", size = 384298, upload-time = "2026-09-30T17:26:25.738Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7a/f0/cba0ac98e98e01849b19f7504eb3aeede741e72dfc31612e46d5f0dd981c/google_auth-2.58.1-py3-none-any.whl", hash = "sha256:66a63572d0ab629554768544df04018d79178c0bd7439ba31683ac576b79024d", size = 262483, upload-time = "2026-09-24T21:51:58.297Z" },
+    { url = "https://files.pythonhosted.org/packages/03/38/311ac322f46ecd789f1342bb7adb0a14b940cf54b5db0e92d4f449aa6cf8/google_auth-2.59.1-py3-none-any.whl", hash = "sha256:89c3f931683a482ac97e61df7eb9da5e08a91703f3c752b2377d72cfb7d69e6a", size = 263519, upload-time = "2026-09-30T17:26:24.017Z" },
 ]
 
 [[package]]
@@ -1358,7 +1358,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.110.0" },
     { name = "freezegun", marker = "extra == 'dev'", specifier = ">=1.2.0" },
     { name = "gitpython", marker = "extra == 'dev'", specifier = "~=3.1.43" },
-    { name = "google-auth", specifier = ">=2.23.3,<2.59.0" },
+    { name = "google-auth", specifier = ">=2.23.3,<2.60.0" },
     { name = "google-genai", specifier = "==1.52.0" },
     { name = "gunicorn", marker = "extra == 'dev'", specifier = "==22.0.0" },
     { name = "gunicorn", marker = "extra == 'prod'", specifier = "==22.0.0" },
@@ -1380,7 +1380,7 @@ requires-dist = [
     { name = "pgserver", marker = "extra == 'dev'", specifier = "==0.1.4" },
     { name = "pgserver", marker = "extra == 'local'", specifier = "==0.1.4" },
     { name = "pgvector", specifier = "==0.2.5" },
-    { name = "phonenumbers", specifier = "==8.13.27" },
+    { name = "phonenumbers", specifier = "==8.13.55" },
     { name = "pillow", specifier = ">=12.2.0" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.0.4" },
     { name = "psutil", specifier = ">=5.8.0" },
@@ -2309,11 +2309,11 @@ wheels = [
 
 [[package]]
 name = "phonenumbers"
-version = "8.13.27"
+version = "8.13.55"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/fd/c4/8fc9f546a149e2c94bf33bc291a1aa4f94e7bbd3c80a868afc0b161d8669/phonenumbers-8.13.27.tar.gz", hash = "sha256:983bda7a3a8b2fad31806db109d4d36b2758ed16d0ab7ad5e737541a67d4637e", size = 2278146, upload-time = "2023-12-20T06:37:52.332Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6e/23/b4c886487ca212ca87768433a43e2b3099c1c2fa5d9e21d2fbce187cc3c2/phonenumbers-8.13.55.tar.gz", hash = "sha256:57c989dda3eabab1b5a9e3d24438a39ebd032fa0172bf68bfd90ab70b3d5e08b", size = 2296624, upload-time = "2025-02-15T08:06:03.465Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cc/7c/35a7fcc4d13ddc0cb0cb6f01560f678213144fd55d6ff66946f5f89005d8/phonenumbers-8.13.27-py2.py3-none-any.whl", hash = "sha256:97269235cfd99b907d96bf6223599d3347010ea93bba9d06f88629c021fc2166", size = 2580913, upload-time = "2023-12-20T06:37:47.962Z" },
+    { url = "https://files.pythonhosted.org/packages/50/dc/a7f0a9d5ad8b98bc5406deb00207b268d6d2edd215c21642e8f2ecc6f0ce/phonenumbers-8.13.55-py2.py3-none-any.whl", hash = "sha256:25feaf46135f0fb1e61b69513dc97c477285ba98a69204bf5a8cf241a844a718", size = 2582306, upload-time = "2025-02-15T08:05:56.746Z" },
 ]
 
 [[package]]

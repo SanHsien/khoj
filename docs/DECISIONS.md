@@ -256,3 +256,7 @@ PR #61 提議升至 5.6.0，雖符合 Dependabot 警報 #234、#235 標示的首
 
 Dependabot 對這兩個套件改為只延後下一個主版的一般版本 PR，安全更新仍可提出；不再封鎖目前 5.x／6.x 系列的修補版。
 
+## 2026-10-03：採用低風險依賴更新
+
+採用 Dependabot #66 的 `phonenumbers` 8.13.55，仍維持 8.x；#60 的 9.x 主版繼續延後。採用 #68 將 `google-auth` 允許上限從 `<2.59` 放寬到 `<2.60`，並在 `uv.lock` 鎖定 2.59.1。鎖檔檢查、Windows 維護 gate、隔離 Python 3.12 的電話號碼解析與 Google credential transport smoke 已通過；PR CI 另行確認。
+
