@@ -260,3 +260,7 @@ Dependabot 對這兩個套件改為只延後下一個主版的一般版本 PR，
 
 採用 Dependabot #66 的 `phonenumbers` 8.13.55，仍維持 8.x；#60 的 9.x 主版繼續延後。採用 #68 將 `google-auth` 允許上限從 `<2.59` 放寬到 `<2.60`，並在 `uv.lock` 鎖定 2.59.1。鎖檔檢查、Windows 維護 gate、隔離 Python 3.12 的電話號碼解析與 Google credential transport smoke 已通過；PR CI 另行確認。
 
+## 2026-10-04：採用 google-genai 2.x
+
+採用 Dependabot #67 的 `google-genai == 2.25.0`，並同步 `uv.lock` 所需的 Pydantic 2.13.5。Khoj 使用的 Gemini 對話、串流、圖片與 Vertex client 呼叫面已在隔離 Python 3.12 環境做離線 API smoke；Windows 維護 gate 與鎖檔檢查通過。未用真實 API key 呼叫 Gemini／Vertex，也未跑需要資料庫的完整產品測試。
+
