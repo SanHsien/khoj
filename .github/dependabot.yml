@@ -14,7 +14,7 @@ updates:
     ignore:
       - dependency-name: "langchain-text-splitters"
         versions: [">=1.0.0"]
-      # Held majors, see docs/DECISIONS.md (2026-09-30): no product tests run here.
+      # Held majors require package-specific review; see docs/DECISIONS.md.
       - dependency-name: "pyjson5"
         versions: [">=2.0.0"]
       - dependency-name: "gunicorn"
@@ -26,7 +26,7 @@ updates:
       - dependency-name: "pytest-asyncio"
         versions: [">=0.22.0"]
       - dependency-name: "sentence-transformers"
-        versions: [">=4.0.0"]
+        update-types: ["version-update:semver-major"]
       - dependency-name: "markdown-it-py"
         versions: [">=4.0.0"]
       - dependency-name: "pgvector"
@@ -34,7 +34,7 @@ updates:
       - dependency-name: "torch"
         versions: [">=2.7.0"]
       - dependency-name: "transformers"
-        versions: [">=5.0.0"]
+        update-types: ["version-update:semver-major"]
       - dependency-name: "langchain"
         versions: [">=1.0.0"]
       - dependency-name: "langchain-core"
