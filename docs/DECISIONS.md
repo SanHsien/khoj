@@ -264,3 +264,7 @@ Dependabot 對這兩個套件改為只延後下一個主版的一般版本 PR，
 
 採用 Dependabot #67 的 `google-genai == 2.25.0`，並同步 `uv.lock` 所需的 Pydantic 2.13.5。Khoj 使用的 Gemini 對話、串流、圖片與 Vertex client 呼叫面已在隔離 Python 3.12 環境做離線 API smoke；Windows 維護 gate 與鎖檔檢查通過。未用真實 API key 呼叫 Gemini／Vertex，也未跑需要資料庫的完整產品測試。
 
+## 2026-10-04：採用 langchain-core 1.x 安全修補
+
+採用 Dependabot #71 的 `langchain-core 1.3.3`，涵蓋安全警報 #120、#121 的首個修補版；`uv.lock` 同步解析 `langchain 1.2.18` 與相關依賴。Windows 實測發現舊 PDF／DOCX loader 在暫存檔仍開啟時重新讀取會失敗，因此改為先關檔、讀完後刪檔。隔離 Python 3.12 的產品模組匯入、PDF／DOCX 擷取、鎖檔與 Windows gate 通過；未跑需要資料庫的完整產品測試。`langchain`／`langchain-core` 後續小版與修補版恢復 Dependabot 提案，其他 LangChain 家族主版仍逐項評估。
+

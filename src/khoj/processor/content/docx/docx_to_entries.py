@@ -1,4 +1,5 @@
 import logging
+import os
 import tempfile
 from typing import Dict, List, Tuple
 
@@ -93,10 +94,12 @@ class DocxToEntries(TextToEntries):
         """Extract text from specified DOCX file"""
         try:
             docx_entry_by_pages = []
-            # Create temp file with .docx extension that gets auto-deleted
-            with tempfile.NamedTemporaryFile(suffix=".docx", delete=True) as tmp:
-                tmp.write(docx_file)
-                tmp.flush()  # Ensure all data is written
+            # Close the temporary file before Docx2txtLoader reopens it on Windows.
+            tmp = tempfile.NamedTemporaryFile(suffix=".docx", delete=False)
+            try:
+                with tmp:
+                    tmp.write(docx_file)
+                    tmp.flush()  # Ensure all data is written
 
                 # Load the content using Docx2txtLoader
                 loader = Docx2txtLoader(tmp.name)
@@ -104,6 +107,8 @@ class DocxToEntries(TextToEntries):
 
                 # Convert the loaded entries into the desired format
                 docx_entry_by_pages = [page.page_content for page in docx_entries_per_file]
+            finally:
+                os.unlink(tmp.name)
         except Exception as e:
             logger.warning(f"Unable to extract text from file: {docx_file}")
             logger.warning(e, exc_info=True)
