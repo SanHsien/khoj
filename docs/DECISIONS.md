@@ -268,3 +268,7 @@ Dependabot 對這兩個套件改為只延後下一個主版的一般版本 PR，
 
 採用 Dependabot #71 的 `langchain-core 1.3.3`，涵蓋安全警報 #120、#121 的首個修補版；`uv.lock` 同步解析 `langchain 1.2.18` 與相關依賴。Windows 實測發現舊 PDF／DOCX loader 在暫存檔仍開啟時重新讀取會失敗，因此改為先關檔、讀完後刪檔。隔離 Python 3.12 的產品模組匯入、PDF／DOCX 擷取、鎖檔與 Windows gate 通過；未跑需要資料庫的完整產品測試。`langchain`／`langchain-core` 後續小版與修補版恢復 Dependabot 提案，其他 LangChain 家族主版仍逐項評估。
 
+## 2026-10-04：採用 GitPython 3.2 與 google-genai 2.26
+
+採用 Dependabot #75 的 GitPython 3.2 相容範圍及 #76 的 `google-genai == 2.26.0`，同步更新 `uv.lock`。GitPython 仍是開發依賴；google-genai 本輪更新後再次檢查 Khoj 使用的 SDK 呼叫面。兩筆變更合併驗收，以免宣告與鎖檔分離。
+
