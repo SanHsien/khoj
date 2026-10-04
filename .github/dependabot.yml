@@ -31,7 +31,7 @@ updates:
       - dependency-name: "pgvector"
         versions: [">=0.3.0"]
       - dependency-name: "torch"
-        versions: [">=2.7.0"]
+        update-types: ["version-update:semver-major"]
       - dependency-name: "transformers"
         update-types: ["version-update:semver-major"]
       - dependency-name: "langchain"

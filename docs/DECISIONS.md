@@ -276,5 +276,7 @@ Dependabot 對這兩個套件改為只延後下一個主版的一般版本 PR，
 
 採用 Dependabot #78 的 `torch == 2.13.0`，同步更新 `uv.lock` 的 Linux CUDA 13 相依與 `sympy`／`triton`。Windows Python 3.12 安裝官方 CPU wheel 後，`torch 2.13.0+cpu`、`sentence-transformers 6.1.0`、`transformers 5.18.0` 的相依檢查通過。
 
+Dependabot 對 Torch 改為只延後下一個主版的一般版本 PR，允許 2.x 後續小版／修補版及安全更新提案。
+
 Khoj 的 Django 初始化、預設 `thenlper/gte-small` embedding 查詢與文件向量化、預設 `mixedbread-ai/mxbai-rerank-xsmall-v1` reranker 推論均在 CPU 實測通過（384 維向量、兩筆文件與兩筆 rerank 分數）。Windows 維護 gate 38 個測試與鎖檔檢查通過。未跑需要 Postgres 的完整伺服器測試；Linux CUDA 路徑由鎖檔平台標記解析，未在本機 GPU 驗證。
 
