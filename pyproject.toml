@@ -63,7 +63,7 @@ dependencies = [
     "requests >= 2.33.0",
     "anyio >= 4.8,< 4.16",
     "pymupdf == 1.28.2",
-    "django==5.2.17",
+    "django==5.2.18",
     "django-unfold == 0.42.0",
     "authlib == 1.8.0",
     "itsdangerous == 2.2.0",
