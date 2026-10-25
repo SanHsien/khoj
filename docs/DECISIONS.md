@@ -288,3 +288,23 @@ Khoj 的 Django 初始化、預設 `thenlper/gte-small` embedding 查詢與文�
 - **文件站**：`launch-editor` 2.14.2、`tinypool` 2.2.0（critical #249、#250）、`postcss-selector-parser` 7.1.7、`serialize-javascript` 7.1.4（皆以 resolutions 固定），`yarn build` 通過。`http-cache-semantics` 4.2.0 已是最新版、沒有修補版（#245），無法處理。
 - **Obsidian**：`dompurify` 3.4.17（critical #283）、`source-map-js` 1.2.2，`yarn build` 通過。**桌面**：`follow-redirects` 1.16.1。
 - **桌面程式 Electron 42**：實機啟動 `electron .`（獨立 user-data-dir）可開窗、載入設定，無伺服器時 API 404 為預期。發現 Node 24 已移除 `Dirent.path`，`processDirectory` 會在第一個檔案拋 `TypeError`；改用 `folder.path` 組路徑，並修掉 catch 內引用不存在的 `error`。
+
+## 2026-10-25：上游審查（commit 無新增；PR 1444 → 1460；issue 1439 → 1446）
+
+上游 `master` 仍在 `ae229ca`，沒有新提交。新增 PR #1445、#1447–#1460、issue #1446 全部讀過 diff（`--state all`），掃過藏碼特徵（超長行、`eval`／`new Function`、長 base64／hex）皆無命中。
+
+| 項目 | 結論 | 本 fork 驗證／理由 |
+| --- | --- | --- |
+| #1452 Gemini 回應沒有 `usage_metadata` 會崩潰 | **採用**（重做，非套 diff） | 本 fork `google/utils.py` 的兩處 `response.usage_metadata.prompt_token_count … if response else 0` 在 `usage_metadata` 為 `None`（被擋的提示）時會 `AttributeError`。抽成 `get_usage_token_counts()`，用真實 `google-genai 2.32.0` 型別跑 3 個案例通過（有值、缺值補 0、無 metadata／`None`），`py_compile` 通過 |
+| #1456 網路搜尋的連線檢查 | **採用** | `is_internet_connected()` 的 `requests.head` 沒有逾時，又在 event loop 上同步執行；加 `timeout=5` 並改 `asyncio.to_thread`。兩處皆為單行，`py_compile` 通過 |
+| #1453 速率限制原子預留 | 不採用 | 只在啟用計費的多使用者託管環境才會被並行請求繞過；本 fork 是自架，觸發條件：開啟 billing 或對外多人使用 |
+| #1454 限制研究模式並行工具呼叫 | 延後（adoption pending） | 需要資料庫與模型才能驗證；觸發條件：能實跑研究模式時 |
+| #1445 串流失敗時完整收尾 | 延後（adoption pending） | 改寫 `api_chat.py` 的事件產生器（+237 行），需實跑伺服器驗 HTTP／WebSocket；觸發條件：同上 |
+| #1455 自架環境顯示他人公開代理 | 延後 | 改變代理可見性，屬產品行為取捨；觸發條件：維護者要多人共用 |
+| #1457、#1458 Emacs 搜尋顯示 | 不採用 | `khoj.el` 用戶端顯示細節，本 fork 不維護 Emacs 介面 |
+| #1459 自架 SMTP 寄信 | 不採用 | 新功能（+343 行），本 fork 不寄信 |
+| #1460 簡體中文 README | 不採用 | 本 fork 的 `README.md` 是繁體中文且有自己的結構 |
+| #1448、#1449 README 連結與 Docker Compose 指令 | 不採用 | 只動上游英文文件，本 fork 的 README 另有維護 |
+| #1447、#1450、#1451（已關閉）、issue #1446、#1439 | 無需處理 | 已關閉的文件／提供者新增；issue 為詢問或已在先前條目處理 |
+
+水位：PR 1444 → 1460、issue 1439 → 1446。#1441、#1443、#1444 已在 2026-09-30 採用，未變動。
