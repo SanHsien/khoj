@@ -1,9 +1,12 @@
 name: Docker build check
 
-# Manual only: installs torch and friends, so it is too heavy for every push.
-# Run it after changing Dockerfile, prod.Dockerfile, requires-python or the base image.
+# Installs torch and friends, so it is too heavy for every push to main.
+# Run it after changing Dockerfile, prod.Dockerfile, requires-python or the base image:
+# push the change to a `verify/*` branch (or dispatch it manually) and read the result.
 on:
   workflow_dispatch:
+  push:
+    branches: ["verify/**"]
 
 permissions:
   contents: read
