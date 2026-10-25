@@ -297,8 +297,8 @@ Khoj 的 Django 初始化、預設 `thenlper/gte-small` embedding 查詢與文�
 
 | 項目 | 結論 | 本 fork 驗證／理由 |
 | --- | --- | --- |
-| #1452 Gemini 回應沒有 `usage_metadata` 會崩潰 | **採用**（重做，非套 diff） | 本 fork `google/utils.py` 的兩處 `response.usage_metadata.prompt_token_count … if response else 0` 在 `usage_metadata` 為 `None`（被擋的提示）時會 `AttributeError`。抽成 `get_usage_token_counts()`，用真實 `google-genai 2.32.0` 型別跑 3 個案例通過（有值、缺值補 0、無 metadata／`None`），`py_compile` 通過 |
-| #1456 網路搜尋的連線檢查 | **採用** | `is_internet_connected()` 的 `requests.head` 沒有逾時，又在 event loop 上同步執行；加 `timeout=5` 並改 `asyncio.to_thread`。兩處皆為單行，`py_compile` 通過 |
+| #1452 Gemini 回應沒有 `usage_metadata` 會崩潰 | **採用**（直接採用上游 PR #1452 的 diff，含其測試 `tests/test_google_usage.py`；作者見上游 PR） | 本 fork `google/utils.py` 的兩處 `response.usage_metadata.prompt_token_count … if response else 0` 在 `usage_metadata` 為 `None`（被擋的提示）時會 `AttributeError`。抽成 `get_usage_token_counts()`，用真實 `google-genai 2.32.0` 型別跑 3 個案例（上游自帶的測試，有值、缺值補 0、無 metadata／`None`）通過，`py_compile` 通過 |
+| #1456 網路搜尋的連線檢查 | **採用** | `is_internet_connected()` 的 `requests.head` 沒有逾時，又在 event loop 上同步執行；加 `timeout=5` 並改 `asyncio.to_thread`。兩處皆為單行，`py_compile` 通過；上游同 PR 的 `tests/test_web_search_connectivity.py`（+90 行，需 FastAPI 與資料庫 fixture）未帶入 |
 | #1453 速率限制原子預留 | 不採用 | 只在啟用計費的多使用者託管環境才會被並行請求繞過；本 fork 是自架，觸發條件：開啟 billing 或對外多人使用 |
 | #1454 限制研究模式並行工具呼叫 | 延後（adoption pending） | 需要資料庫與模型才能驗證；觸發條件：能實跑研究模式時 |
 | #1445 串流失敗時完整收尾 | 延後（adoption pending） | 改寫 `api_chat.py` 的事件產生器（+237 行），需實跑伺服器驗 HTTP／WebSocket；觸發條件：同上 |
