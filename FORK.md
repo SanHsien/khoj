@@ -22,7 +22,7 @@
 | `AGENTS.md` | 本 fork 的 AI 維護單一真相源 |
 | `NOTICE.md` / `FORK.md` | 來源、授權與同步說明 |
 | `tools/dev_check.ps1` | Windows 本機一鍵 gate（維護工具，不安裝產品依賴） |
-| `.github/workflows/ci.yml` | Ubuntu 3.10–3.14 + Windows Python 3.14：compile / ruff / 維護測試 / 連結檢查 |
+| `.github/workflows/ci.yml` | Ubuntu 3.11–3.14 + Windows Python 3.14：compile / ruff / 維護測試 / 連結檢查 |
 | `.github/workflows/upstream-check.yml` | 每週對 `upstream/master` 做未審查 commit 檢查 |
 | 發佈與產品 CI workflow 閘門 | PyPI、GHCR、GitHub Pages、桌面、Obsidian release、eval、上游 `test.yml`／pre-commit／Emacs 只允許 `khoj-ai/khoj` |
 | `docker-compose.yml` | fork overlay：埠綁 `127.0.0.1`、關匿名模式與遙測、computer 走 `--profile operator` |

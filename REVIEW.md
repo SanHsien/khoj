@@ -4,7 +4,7 @@
 - Review baseline: `af04f94806e13de49c23c2c662fd1f5a4ea7eceb`
 - Remediation: 同日 fork-local overlay（不回貢）
 - Upstream reviewed through: `ae229ca894c0b80ad84664afcfdde523b5e87057`
-- Primary environment: Windows 11、PowerShell、Python 3.14.7（本機 gate）；產品執行建議 Docker；from-source 需 Python 3.10–3.12
+- Primary environment: Windows 11、PowerShell、Python 3.14.7（本機 gate）；產品執行建議 Docker；from-source 需 Python 3.11–3.12
 - Status: 維護骨架可用。R-01～R-08、R-10 已在本線修。R-09（已閘門 workflow 的浮動 Action tag）與 R-11（產品 Python `<3.13`）接受。
 
 ## 結論

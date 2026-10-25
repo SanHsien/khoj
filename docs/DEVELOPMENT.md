@@ -51,7 +51,7 @@ docker compose up -d
 
 ### 從原始碼跑（選配，重）
 
-上游要求 Python **3.10–3.12**（`pyproject.toml` 寫 `>=3.10, <3.13`），以及 Postgres + pgvector、前端 bun 建置：
+上游要求 Python **3.11–3.12**（`pyproject.toml` 寫 `>=3.11, <3.13`；3.10 已於 2026-10 放棄支援），以及 Postgres + pgvector、前端 bun 建置：
 
 ```powershell
 # 另開一個 3.12 venv，不要跟維護用的 .venv 混在一起
@@ -77,7 +77,7 @@ Obsidian 外掛開發在 `src/interface/obsidian`：`yarn install` 後 `yarn dev
 3. `pytest tools/tests`（覆寫根目錄 `pytest.ini` 的 Django `addopts`）
 4. `python tools/check_links.py`
 
-CI 在 Ubuntu 跑 3.10–3.14，並加一個 Windows Python 3.14 job 跑同一套 gate。推 `main` 前先跑本機 gate。
+CI 在 Ubuntu 跑 3.11–3.14，並加一個 Windows Python 3.14 job 跑同一套 gate。推 `main` 前先跑本機 gate。
 
 上游 `test.yml` 仍聽 `master`，在完整 Khoj 依賴 + Postgres 上跑產品測試。本線日常不重跑那套。
 

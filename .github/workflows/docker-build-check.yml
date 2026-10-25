@@ -1,0 +1,32 @@
+name: Docker build check
+
+# Manual only: installs torch and friends, so it is too heavy for every push.
+# Run it after changing Dockerfile, prod.Dockerfile, requires-python or the base image.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build (${{ matrix.dockerfile }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        dockerfile: [Dockerfile, prod.Dockerfile]
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build image (no push)
+        run: docker build --file "${{ matrix.dockerfile }}" --tag khoj-check:local .
+
+      - name: Import Khoj inside the image
+        run: >-
+          docker run --rm --entrypoint python3 khoj-check:local
+          -c "import sys; print(sys.version); import PIL, websockets, langchain_core; print(PIL.__version__, websockets.__version__)"

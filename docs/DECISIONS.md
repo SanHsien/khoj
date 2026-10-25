@@ -310,3 +310,16 @@ Khoj 的 Django 初始化、預設 `thenlper/gte-small` embedding 查詢與文�
 | #1447、#1450、#1451（已關閉）、issue #1446、#1439 | 無需處理 | 已關閉的文件／提供者新增；issue 為詢問或已在先前條目處理 |
 
 水位：PR 1444 → 1460、issue 1439 → 1446。#1441、#1443、#1444 已在 2026-09-30 採用，未變動。
+
+## 2026-10-25：放棄 Python 3.10 支援
+
+**決定**：`requires-python` 從 `>=3.10, <3.13` 改為 `>=3.11, <3.13`；Docker 基底從 `ubuntu:jammy`（Python 3.10）改為 `ubuntu:noble`（Python 3.12）。
+
+**理由**：
+- Python 3.10 於 2026-10 結束支援。
+- Pillow 的 50 筆警示（含 critical 5）修補版 13.0.0 需要 Python 3.11 以上；`filelock` 4.2.x（警示 #354、#362、#363）同樣需要 3.11 以上。不放棄 3.10，鎖檔的 3.10 分支就永遠停在有漏洞的版本。
+- 上游 `khoj-ai/khoj` 目前仍是 `>=3.10`、Docker 仍用 `ubuntu:jammy`，沒有可對齊的版本；本 fork 先走一步，之後上游若升級再比對。
+
+**變更**：`pyproject.toml`（`requires-python`、移除 3.10 classifier、`pillow >= 13.0.0`）、`uv.lock`（Pillow 13.0.0、`filelock` 4.2.4，移除只給 3.10 用的 `exceptiongroup`、`async-timeout`、`tomli`）、`Dockerfile`／`prod.Dockerfile`（`ubuntu:noble`、site-packages 路徑改 `python3.12`、加 `PIP_BREAK_SYSTEM_PACKAGES=1`，因 Ubuntu 24.04 的系統 Python 受 PEP 668 限制）、CI 矩陣與 ruff `--target-version`、`test.yml`、`run_evals.yml`，以及文件中的版本說明。
+
+**驗證**：Pillow 13.0.0 實測 `Image.open`、`ImageDraw.Draw`、WEBP 存取（產品只用到這些）；本機維護 gate 綠。新增手動觸發的 `docker-build-check.yml`，在 GitHub 上建置兩個 Dockerfile 並在映像內匯入 Pillow、websockets、langchain-core。本機沒有 Docker。**使用者影響**：已在 Python 3.10 部署的人要先升級 Python 或改用新映像。

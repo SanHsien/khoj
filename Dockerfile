@@ -1,9 +1,12 @@
 # syntax=docker/dockerfile:1
-FROM ubuntu:jammy AS base
+FROM ubuntu:noble AS base
 LABEL homepage="https://khoj.dev"
 LABEL repository="https://github.com/khoj-ai/khoj"
 LABEL org.opencontainers.image.source="https://github.com/khoj-ai/khoj"
 LABEL org.opencontainers.image.description="Your second brain, containerized for personal, local deployment."
+
+# Ubuntu 24.04 marks system Python as externally managed (PEP 668); this image only holds Khoj
+ENV PIP_BREAK_SYSTEM_PACKAGES=1
 
 # Install System Dependencies
 RUN apt update -y && apt -y install \
@@ -51,7 +54,7 @@ RUN bun run build
 FROM base
 ENV PYTHONPATH=/app/src
 WORKDIR /app
-COPY --from=server-deps /usr/local/lib/python3.10/dist-packages /usr/local/lib/python3.10/dist-packages
+COPY --from=server-deps /usr/local/lib/python3.12/dist-packages /usr/local/lib/python3.12/dist-packages
 COPY --from=web-app /app/src/interface/web/out ./src/khoj/interface/built
 COPY . .
 RUN cd src && python3 khoj/manage.py collectstatic --noinput

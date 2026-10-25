@@ -7,7 +7,7 @@ name = "khoj"
 description = "Your Second Brain"
 readme = "README.md"
 license = "AGPL-3.0-or-later"
-requires-python = ">=3.10, <3.13"
+requires-python = ">=3.11, <3.13"
 authors = [
     { name = "Debanjum Singh Solanky, Saba Imran" },
 ]
@@ -27,7 +27,6 @@ classifiers = [
     "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
@@ -46,7 +45,7 @@ dependencies = [
     "tiktoken >= 0.3.2",
     "tenacity >= 9.0.0",
     "magika ~= 0.5.1",
-    "pillow >= 12.2.0",
+    "pillow >= 13.0.0",
     "pydantic[email] >= 2.0.0",
     "pyyaml ~= 6.0",
     "rich >= 13.3.1",

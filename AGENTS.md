@@ -18,7 +18,7 @@
 - 不推送到 `upstream`。上游同步先跑 `python tools/check_upstream_updates.py`，逐筆審查後再 merge / cherry-pick；不盲目覆蓋 fork 文件與 Windows gate。
 - 不發佈到 PyPI、GHCR、docs.khoj.dev、Obsidian 商店或桌面發行管道。那些 workflow 已加 `khoj-ai/khoj` 閘門，不要拿掉。
 - 不要把維護 gate 改成 `uv sync --all-extras`。產品依賴含 torch／whisper，不屬於本線一鍵驗收。
-- 產品 Python 是 `>=3.10, <3.13`。Windows gate 用 3.14 只跑維護工具，不代表 Khoj 伺服器能在 3.14 執行。
+- 產品 Python 是 `>=3.11, <3.13`。Windows gate 用 3.14 只跑維護工具，不代表 Khoj 伺服器能在 3.14 執行。
 - 不把 fork 包裝成原創產品，不移除上游作者、贊助或官方連結。
 
 ## 技術與資料流
