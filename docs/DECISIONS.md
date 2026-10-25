@@ -288,7 +288,7 @@ Khoj 的 Django 初始化、預設 `thenlper/gte-small` embedding 查詢與文�
 - **文件站**：`launch-editor` 2.14.2、`tinypool` 2.2.0（critical #249、#250）、`postcss-selector-parser` 7.1.7、`serialize-javascript` 7.1.4（皆以 resolutions 固定），`yarn build` 通過。`http-cache-semantics` 4.2.0 已是最新版、沒有修補版（#245），無法處理。
 - **Obsidian**：`dompurify` 3.4.17（critical #283）、`source-map-js` 1.2.2，`yarn build` 通過。**桌面**：`follow-redirects` 1.16.1。
 - `.github/dependabot.yml` 移除 `websockets >=14`、`langsmith >=0.8.6` 兩條 ignore，兩者的一般版本 PR 恢復。`uv.lock` 用 uv 0.13.5 產生（`revision = 5`）；`langsmith` 0.14 新帶入 `httpx2`／`httpcore2`（pydantic 維護的 httpx 分支）與 `truststore`，後者讓 langsmith 的 TLS 改用作業系統憑證庫。
-- **刻意未處理**：(1) Pillow（約 50 筆，含 critical 5）修補版 13.0.0 需要 Python 3.11 以上，(2) `filelock` 在 Python 3.10 分支仍鎖 4.1.0（警示 #354、#362、#363），兩者都因 `requires-python = ">=3.10"` 與 Docker 映像使用 Python 3.10；觸發條件：維護者決定放棄 Python 3.10（3.10 於 2026-10 結束支援）。(3) `http-cache-semantics` 4.2.0 已是最新、無修補版（#245）。(4) `bun.lock` 內 `mermaid` 自帶 `katex 0.16.38`，仍落在警示 #254 的範圍，該警示的 manifest 是 `package.json`（已升 0.18），實際打包仍含舊版 katex；觸發條件：mermaid 升級其 katex 依賴。
+- **刻意未處理**：(1) Pillow（約 50 筆，含 critical 5）修補版 13.0.0 需要 Python 3.11 以上，(2) `filelock` 在 Python 3.10 分支仍鎖 4.1.0（警示 #354、#362、#363），兩者都因 `requires-python = ">=3.10"` 與 Docker 映像使用 Python 3.10；觸發條件：維護者決定放棄 Python 3.10（3.10 於 2026-10 結束支援）。**(1)(2) 已於同日解除**，見文末「放棄 Python 3.10 支援」條目。(3) `http-cache-semantics` 4.2.0 已是最新、無修補版（#245）。(4) `bun.lock` 內 `mermaid` 自帶 `katex 0.16.38`，仍落在警示 #254 的範圍，該警示的 manifest 是 `package.json`（已升 0.18），實際打包仍含舊版 katex；觸發條件：mermaid 升級其 katex 依賴。
 - **桌面程式 Electron 42**：實機啟動 `electron .`（獨立 user-data-dir）可開窗、載入設定，無伺服器時 API 404 為預期。發現 Node 24 已移除 `Dirent.path`，`processDirectory` 會在第一個檔案拋 `TypeError`；改用 `folder.path` 組路徑，並修掉 catch 內引用不存在的 `error`。
 
 ## 2026-10-25：上游審查（commit 無新增；PR 1444 → 1460；issue 1439 → 1446）
@@ -320,6 +320,6 @@ Khoj 的 Django 初始化、預設 `thenlper/gte-small` embedding 查詢與文�
 - Pillow 的 50 筆警示（含 critical 5）修補版 13.0.0 需要 Python 3.11 以上；`filelock` 4.2.x（警示 #354、#362、#363）同樣需要 3.11 以上。不放棄 3.10，鎖檔的 3.10 分支就永遠停在有漏洞的版本。
 - 上游 `khoj-ai/khoj` 目前仍是 `>=3.10`、Docker 仍用 `ubuntu:jammy`，沒有可對齊的版本；本 fork 先走一步，之後上游若升級再比對。
 
-**變更**：`pyproject.toml`（`requires-python`、移除 3.10 classifier、`pillow >= 13.0.0`）、`uv.lock`（Pillow 13.0.0、`filelock` 4.2.4，移除只給 3.10 用的 `exceptiongroup`、`async-timeout`、`tomli`）、`Dockerfile`／`prod.Dockerfile`（`ubuntu:noble`、site-packages 路徑改 `python3.12`、加 `PIP_BREAK_SYSTEM_PACKAGES=1`，因 Ubuntu 24.04 的系統 Python 受 PEP 668 限制）、CI 矩陣與 ruff `--target-version`、`test.yml`、`run_evals.yml`，以及文件中的版本說明。
+**變更**：`pyproject.toml`（`requires-python`、移除 3.10 classifier、`pillow >= 13.0.0`）、`uv.lock`（Pillow 13.0.0、`filelock` 4.2.4，移除只給 3.10 用的 `exceptiongroup`、`async-timeout`、`tomli` 與分版的 `networkx` 3.4.2、`platformdirs` 4.12.4）、`Dockerfile`／`prod.Dockerfile`（`ubuntu:noble`、site-packages 路徑改 `python3.12`、加 `PIP_BREAK_SYSTEM_PACKAGES=1`，因 Ubuntu 24.04 的系統 Python 受 PEP 668 限制）、CI 矩陣與 ruff `--target-version`、`test.yml`、`run_evals.yml`，以及文件中的版本說明。
 
-**驗證**：Pillow 13.0.0 實測 `Image.open`、`ImageDraw.Draw`、WEBP 存取（產品只用到這些）；本機維護 gate 綠。新增手動觸發的 `docker-build-check.yml`，在 GitHub 上建置兩個 Dockerfile 並在映像內匯入 Pillow、websockets、langchain-core。本機沒有 Docker。**使用者影響**：已在 Python 3.10 部署的人要先升級 Python 或改用新映像。
+**驗證**：Pillow 13.0.0 實測 `Image.open`、`ImageDraw.Draw`、WEBP 存取（產品只用到這些）；本機維護 gate 綠。新增 `docker-build-check.yml`（手動觸發，或推到 `verify/*` 分支時觸發），在 GitHub 上建置兩個 Dockerfile 並在映像內匯入 Pillow、websockets、langchain-core。本機沒有 Docker。**使用者影響**：已在 Python 3.10 部署的人要先升級 Python 或改用新映像。
