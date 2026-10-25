@@ -40,14 +40,10 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "langchain-community"
         versions: [">=0.4.0"]
-      - dependency-name: "langsmith"
-        versions: [">=0.8.6"]
       - dependency-name: "magika"
         versions: [">=0.6.0"]
       - dependency-name: "openai"
         versions: [">=3.0.0"]
-      - dependency-name: "websockets"
-        versions: [">=14.0"]
       - dependency-name: "markdownify"
         versions: [">=1.0.0"]
       - dependency-name: "cron-descriptor"

@@ -156,7 +156,7 @@ resolutions 一律用 `^` 限在依賴方要求的主版內：`>=` 會把 `undic
 | `torch` | 2.6.0（`== 2.6.0`） | 2.13.0；部分漏洞無修補版 | 跨 7 個小版且綁 `sentence-transformers == 3.4.1`，要實跑伺服器與 embedding 才能驗 |
 | `transformers` | 4.53.3 | 5.10.0 | 主版升級；`sentence-transformers == 3.4.1` 要求 `transformers <5`，兩者要一起升 |
 | `langchain`／`langchain-core`／`langchain-text-splitters` | 0.3.x | 1.x | 主版升級，`langchain-community == 0.3.31` 也要一起動 |
-| `langsmith` | 0.8.5 | 0.8.18 | 本身只是小版更新，但要把 `websockets == 13.0` 升到 15；khoj 未直接使用 `langsmith`，漏洞在 `TracingMiddleware` |
+| `langsmith` | 0.8.5 | 0.8.18 | 本身只是小版更新，但要把 `websockets == 13.0` 升到 15；khoj 未直接使用 `langsmith`，漏洞在 `TracingMiddleware`。**2026-10-25 已解除**，見文末同日條目 |
 | `extract-zip`（桌面） | 2.0.1 | 無修補版 | 只在 `electron` 安裝時使用 |
 
 **觸發條件**：上游升這些版本、或能在本機用 Docker 實跑伺服器與 embedding 測試時，整組一起升。
@@ -187,7 +187,7 @@ resolutions 一律用 `^` 限在依賴方要求的主版內：`>=` 會把 `undic
 | `torch`／`langchain-community` 等 | #43、#40 | 沿用 2026-09-29 延後項（torch、langchain 家族、langsmith），Dependabot 已加 `ignore` | 見 2026-09-29 觸發條件 |
 | `markdownify` | `~=0.14.1` → `<1.3`（#50） | 範圍放寬納入 1.x 主版，HTML 轉 Markdown 輸出可能變動，無測試覆蓋 | 有產品測試時 |
 | `cron-descriptor` | 1.4.3 → 2.1.0（#49） | 主版，與 `django-apscheduler == 0.7.0` 一起使用，需實跑排程頁 | 實跑排程管理頁時 |
-| `websockets` | 13.0 → 16.1.1（#46） | 主版；與 2026-09-29 延後的 `langsmith` 同一組（`websockets == 13.0` 是刻意釘住），需一起驗證 | 隨 langsmith 升級一起處理 |
+| `websockets` | 13.0 → 16.1.1（#46） | 主版；與 2026-09-29 延後的 `langsmith` 同一組（`websockets == 13.0` 是刻意釘住），需一起驗證 | 隨 langsmith 升級一起處理。**2026-10-25 已解除**，見文末同日條目 |
 | `django-phonenumber-field` | 7.3 → 8.5（#25） | 主版，與 Django 模型欄位／遷移有關，需實跑遷移驗證 | 可用 Docker 實跑伺服器與遷移時 |
 | `sentence-transformers` | 3.4.1 → 6.1.0（#31） | 主版，與 `torch`／`transformers` 延後項綁在一起 | 隨 torch／transformers 一起升 |
 | `markdown-it-py` | `~=3.0.0` → `<4.3`（#32） | 範圍放寬納入 4.x 主版，無測試覆蓋 | 有產品測試時 |
@@ -287,6 +287,8 @@ Khoj 的 Django 初始化、預設 `thenlper/gte-small` embedding 查詢與文�
 - **網頁介面**：`next` 15.5.28（critical #285、high #284）、`katex` ^0.18.2、`zod` ^4.6.6（high #350，3.x 沒有修補版）。zod 4 移除 `required_error` 與 `ZodError.errors`，改為 `error:` 與 `.issues`；`@hookform/resolvers` 3.10 不支援 zod 4，升 5.9.2。`bun run build` 通過；以 node 實測 zod 4 的必填訊息與 `issues` 路徑。
 - **文件站**：`launch-editor` 2.14.2、`tinypool` 2.2.0（critical #249、#250）、`postcss-selector-parser` 7.1.7、`serialize-javascript` 7.1.4（皆以 resolutions 固定），`yarn build` 通過。`http-cache-semantics` 4.2.0 已是最新版、沒有修補版（#245），無法處理。
 - **Obsidian**：`dompurify` 3.4.17（critical #283）、`source-map-js` 1.2.2，`yarn build` 通過。**桌面**：`follow-redirects` 1.16.1。
+- `.github/dependabot.yml` 移除 `websockets >=14`、`langsmith >=0.8.6` 兩條 ignore，兩者的一般版本 PR 恢復。`uv.lock` 用 uv 0.13.5 產生（`revision = 5`）；`langsmith` 0.14 新帶入 `httpx2`／`httpcore2`（pydantic 維護的 httpx 分支）與 `truststore`，後者讓 langsmith 的 TLS 改用作業系統憑證庫。
+- **刻意未處理**：(1) Pillow（約 50 筆，含 critical 5）修補版 13.0.0 需要 Python 3.11 以上，(2) `filelock` 在 Python 3.10 分支仍鎖 4.1.0（警示 #354、#362、#363），兩者都因 `requires-python = ">=3.10"` 與 Docker 映像使用 Python 3.10；觸發條件：維護者決定放棄 Python 3.10（3.10 於 2026-10 結束支援）。(3) `http-cache-semantics` 4.2.0 已是最新、無修補版（#245）。(4) `bun.lock` 內 `mermaid` 自帶 `katex 0.16.38`，仍落在警示 #254 的範圍，該警示的 manifest 是 `package.json`（已升 0.18），實際打包仍含舊版 katex；觸發條件：mermaid 升級其 katex 依賴。
 - **桌面程式 Electron 42**：實機啟動 `electron .`（獨立 user-data-dir）可開窗、載入設定，無伺服器時 API 404 為預期。發現 Node 24 已移除 `Dirent.path`，`processDirectory` 會在第一個檔案拋 `TypeError`；改用 `folder.path` 組路徑，並修掉 catch 內引用不存在的 `error`。
 
 ## 2026-10-25：上游審查（commit 無新增；PR 1444 → 1460；issue 1439 → 1446）
