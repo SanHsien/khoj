@@ -280,3 +280,11 @@ Dependabot 對 Torch 改為只延後下一個主版的一般版本 PR，允許 2
 
 Khoj 的 Django 初始化、預設 `thenlper/gte-small` embedding 查詢與文件向量化、預設 `mixedbread-ai/mxbai-rerank-xsmall-v1` reranker 推論均在 CPU 實測通過（384 維向量、兩筆文件與兩筆 rerank 分數）。Windows 維護 gate 38 個測試與鎖檔檢查通過。未跑需要 Postgres 的完整伺服器測試；Linux CUDA 路徑由鎖檔平台標記解析，未在本機 GPU 驗證。
 
+## 2026-10-25：Dependabot 警示清理（前端、文件站、桌面、langchain 組）
+
+- **`websockets` 解除釘版**：`== 13.1` 改 `>= 15.0, < 17`，鎖檔升到 16.1.1。這是 `langsmith`（警示 #130）、`langgraph-sdk`（#255）、`langchain`（#129）一起被擋住的根因：新版都要 `websockets >= 14／15`，2026-09-29 的延後項因此作廢。khoj 沒有直接 `import websockets`，只有 uvicorn 的 WebSocket 實作會用；實測鎖檔版本的 uvicorn 0.41.0／starlette 1.3.1／fastapi 0.138.0 搭 `websockets 16.1.1`，用 `--ws websockets` 起 `/ws` 端點，客戶端來回 echo 正常。
+- `uv.lock`：`langchain` 1.4.7、`langchain-core` 1.7.0、`langgraph` 1.2.17、`langgraph-sdk` 0.4.9、`langsmith` 0.14.12、`certifi` 2026.10.23、`filelock`（Python 3.11 以上）4.2.4。`langchain-community == 0.3.31` 與 `langchain-text-splitters == 1.1.2` 維持；隔離 Python 3.12 環境匯入產品用到的 loader、splitter、`ChatMessage`、`PromptTemplate` 皆正常。
+- **網頁介面**：`next` 15.5.28（critical #285、high #284）、`katex` ^0.18.2、`zod` ^4.6.6（high #350，3.x 沒有修補版）。zod 4 移除 `required_error` 與 `ZodError.errors`，改為 `error:` 與 `.issues`；`@hookform/resolvers` 3.10 不支援 zod 4，升 5.9.2。`bun run build` 通過；以 node 實測 zod 4 的必填訊息與 `issues` 路徑。
+- **文件站**：`launch-editor` 2.14.2、`tinypool` 2.2.0（critical #249、#250）、`postcss-selector-parser` 7.1.7、`serialize-javascript` 7.1.4（皆以 resolutions 固定），`yarn build` 通過。`http-cache-semantics` 4.2.0 已是最新版、沒有修補版（#245），無法處理。
+- **Obsidian**：`dompurify` 3.4.17（critical #283）、`source-map-js` 1.2.2，`yarn build` 通過。**桌面**：`follow-redirects` 1.16.1。
+- **桌面程式 Electron 42**：實機啟動 `electron .`（獨立 user-data-dir）可開窗、載入設定，無伺服器時 API 404 為預期。發現 Node 24 已移除 `Dirent.path`，`processDirectory` 會在第一個檔案拋 `TypeError`；改用 `folder.path` 組路徑，並修掉 catch 內引用不存在的 `error`。

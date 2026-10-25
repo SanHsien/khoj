@@ -127,14 +127,15 @@ function processDirectory(filesToPush, folder) {
         const files = fs.readdirSync(folder.path, { withFileTypes: true });
 
         for (const file of files) {
-            const filePath = path.join(file.path, file.name || '');
+            // Dirent.path was removed in Node 24 (Electron 42); build from the directory we listed
+            const filePath = path.join(folder.path, file.name || '');
             // Skip hidden files and folders
             if (file.name.startsWith('.')) {
                 continue;
             }
             // Add supported files to index
             if (file.isFile() && isSupportedFileType(filePath)) {
-                console.log(`Add ${file.name} in ${file.path} for indexing`);
+                console.log(`Add ${file.name} in ${folder.path} for indexing`);
                 filesToPush.push(filePath);
             }
             // Recursively process subdirectories
@@ -148,7 +149,7 @@ function processDirectory(filesToPush, folder) {
         } else if (err.code === 'ENOENT') {
             console.error(`${folder.path} does not exist`);
         } else {
-            console.error(`An error occurred while reading directory: ${error.message}`);
+            console.error(`An error occurred while reading directory: ${err.message}`);
         }
         return;
     }

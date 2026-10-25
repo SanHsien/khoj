@@ -157,17 +157,17 @@ function Badge(props: { icon: JSX.Element; text?: string; hoverText?: string }) 
 }
 
 export const EditAgentSchema = z.object({
-    name: z.string({ required_error: "Name is required" }).min(1, "Name is required"),
+    name: z.string({ error: "Name is required" }).min(1, "Name is required"),
     persona: z
-        .string({ required_error: "Personality is required" })
+        .string({ error: "Personality is required" })
         .min(1, "Personality is required"),
-    color: z.string({ required_error: "Color is required" }).min(1, "Color is required"),
-    icon: z.string({ required_error: "Icon is required" }).min(1, "Icon is required"),
+    color: z.string({ error: "Color is required" }).min(1, "Color is required"),
+    icon: z.string({ error: "Icon is required" }).min(1, "Icon is required"),
     privacy_level: z
-        .string({ required_error: "Privacy level is required" })
+        .string({ error: "Privacy level is required" })
         .min(1, "Privacy level is required"),
     chat_model: z
-        .string({ required_error: "Chat model is required" })
+        .string({ error: "Chat model is required" })
         .min(1, "Chat model is required"),
     files: z.array(z.string()).default([]).optional(),
     input_tools: z.array(z.string()).default([]).optional(),
@@ -679,7 +679,7 @@ export function AgentModificationForm(props: AgentModificationFormProps) {
             EditAgentSchema.parse(props.form.getValues());
             return true;
         } catch (error) {
-            const errors: { [key: string]: string } = (error as ZodError).errors.reduce(
+            const errors: { [key: string]: string } = (error as ZodError).issues.reduce(
                 (acc: any, curr: any) => {
                     acc[curr.path[0]] = curr.message;
                     return acc;

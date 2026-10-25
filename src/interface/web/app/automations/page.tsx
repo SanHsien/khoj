@@ -471,11 +471,11 @@ function SharedAutomationCard(props: SharedAutomationCardProps) {
 
 const EditAutomationSchema = z.object({
     subject: z.optional(z.string()),
-    everyBlah: z.string({ required_error: "Every is required" }),
+    everyBlah: z.string({ error: "Every is required" }),
     dayOfWeek: z.optional(z.number()),
     dayOfMonth: z.optional(z.string()),
-    timeRecurrence: z.string({ required_error: "Time Recurrence is required" }),
-    schedulingRequest: z.string({ required_error: "Query to Run is required" }),
+    timeRecurrence: z.string({ error: "Time Recurrence is required" }),
+    schedulingRequest: z.string({ error: "Query to Run is required" }),
 });
 
 interface EditCardProps {
