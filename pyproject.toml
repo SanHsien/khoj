@@ -77,7 +77,7 @@ dependencies = [
     "phonenumbers == 8.13.55",
     "markdownify ~= 0.14.1",
     "markdown-it-py ~= 3.0.0",
-    "websockets >= 15.0, < 17",
+    "websockets >= 15.0, < 18",
     "psutil >= 5.8.0",
     "huggingface-hub[hf_xet] >= 0.22.2",
     "apscheduler >= 3.10,< 3.12",
