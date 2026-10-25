@@ -61,7 +61,7 @@ dependencies = [
     "langchain-community == 0.3.31",
     "requests >= 2.33.0",
     "anyio >= 4.8,< 4.16",
-    "pymupdf == 1.28.2",
+    "pymupdf == 2.0",
     "django==5.2.18",
     "django-unfold == 0.42.0",
     "authlib == 1.9.1",
