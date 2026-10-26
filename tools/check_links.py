@@ -17,6 +17,9 @@ ROOT = Path(__file__).resolve().parent.parent
 LINK_PATTERN = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 IMAGE_PATTERN = re.compile(r"!\[[^\]]*\]\(([^)]+)\)")
 HTML_SRC_PATTERN = re.compile(r"""(?is)<img[^>]+src=["']([^"']+)["']""")
+# READMEs switch language with `<a href="README.en.md">`; Markdown syntax is not the only
+# way to write a link, and an unchecked syntax is a link that can rot unnoticed.
+HTML_HREF_PATTERN = re.compile(r"""(?is)<a\s[^>]*?href=["']([^"']+)["']""")
 SKIP_PREFIXES = ("http://", "https://", "mailto:", "tel:", "#")
 SKIP_NAMES = {
     "upstream-review-report.md",
@@ -79,7 +82,7 @@ def _missing_relative(path: Path, target: str) -> str | None:
 def check_document(path: Path) -> list[str]:
     problems: list[str] = []
     text = path.read_text(encoding="utf-8")
-    for pattern in (LINK_PATTERN, IMAGE_PATTERN, HTML_SRC_PATTERN):
+    for pattern in (LINK_PATTERN, IMAGE_PATTERN, HTML_SRC_PATTERN, HTML_HREF_PATTERN):
         for match in pattern.finditer(text):
             missing = _missing_relative(path, match.group(1))
             if missing:
