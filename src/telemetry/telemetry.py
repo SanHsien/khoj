@@ -9,8 +9,6 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from posthog import Posthog
 
-from khoj.utils.security import sanitize_log_value
-
 # Initialize Global App Variables
 app = FastAPI()
 sqlfile = "data/khoj.sqlite"
@@ -18,6 +16,16 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 load_dotenv()
 posthog = Posthog(project_api_key=os.getenv("POSTHOG_API_KEY"), host="https://app.posthog.com")
+
+
+def sanitize_log_value(value: object) -> str:
+    """Render untrusted values on one physical log line.
+
+    Kept in step with khoj.utils.security.sanitize_log_value on purpose: this server is
+    built from the src/telemetry directory alone (see its Dockerfile), so the khoj
+    package is not importable inside the container.
+    """
+    return str(value).replace("\r", "\\r").replace("\n", "\\n")
 
 
 @app.post("/v1/telemetry")
