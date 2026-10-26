@@ -323,3 +323,27 @@ Khoj 的 Django 初始化、預設 `thenlper/gte-small` embedding 查詢與文�
 **變更**：`pyproject.toml`（`requires-python`、移除 3.10 classifier、`pillow >= 13.0.0`）、`uv.lock`（Pillow 13.0.0、`filelock` 4.2.4，移除只給 3.10 用的 `exceptiongroup`、`async-timeout`、`tomli` 與分版的 `networkx` 3.4.2、`platformdirs` 4.12.4）、`Dockerfile`／`prod.Dockerfile`（`ubuntu:noble`、site-packages 路徑改 `python3.12`、加 `PIP_BREAK_SYSTEM_PACKAGES=1`，因 Ubuntu 24.04 的系統 Python 受 PEP 668 限制）、CI 矩陣與 ruff `--target-version`、`test.yml`、`run_evals.yml`，以及文件中的版本說明。
 
 **驗證**：Pillow 13.0.0 實測 `Image.open`、`ImageDraw.Draw`、WEBP 存取（產品只用到這些）；本機維護 gate 綠。新增 `docker-build-check.yml`（手動觸發，或推到 `verify/*` 分支時觸發），在 GitHub 上建置兩個 Dockerfile 並在映像內匯入 Pillow、websockets、langchain-core。本機沒有 Docker。**使用者影響**：已在 Python 3.10 部署的人要先升級 Python 或改用新映像。
+
+## 2026-10-26：`http-cache-semantics` 警報維持公開，未以版本號假解
+
+Dependabot Alert #245（GHSA-ch52-4w7c-c8xp／CVE-2026-93748）指向
+`documentation/yarn.lock` 的 transitive runtime dependency：`got 12.6.1`
+→ `cacheable-request 10.2.14` → `http-cache-semantics 4.2.0`。
+
+**決定**：暫不把 `http-cache-semantics` 強制升到 npm registry 的 4.3.0，也不關閉警報。
+2026-10-26 實查 GitHub Advisory 的 vulnerable range 仍為 `<= 4.2.0`，
+`first_patched_version` 為空；雖然 4.3.0 已發布，4.2.0→4.3.0 的套件 source
+diff 沒有修改 `max-stale` 判斷。用兩版各自的實際套件做最小 shared-cache
+reproduction（含 `Set-Cookie` 與 `Cache-Control: max-stale=31536000`）都取得快取
+回應。因此只靠版本已離開 Advisory range 無法證明修復，強制 resolution 只會掩蓋
+尚未排除的跨使用者快取風險。
+
+**限制與觸發條件**：這個依賴只在文件站的開發／建置 dependency chain，不是 Khoj
+伺服器 runtime；上述重現僅驗證 library-level 行為，沒有證明 Khoj 真實服務存在跨使用者
+快取洩漏。供應商明確確認修補版前仍保留為 open alert，後續依兩條路徑驗收：
+
+1. **官方修補版**：對實際候選 `http-cache-semantics` 套件跑相同 reproduction，確認不再
+   回傳該快取；再更新候選 lockfile，跑文件站 build 與 Windows 維護 gate。
+2. **移除依賴鏈**：先產生候選 manifest 與 lockfile，再用 dependency graph 確認
+   `http-cache-semantics` 已完全不存在；此路徑不要求載入已移除的套件跑 reproduction，之後跑
+   文件站 build 與 Windows 維護 gate。
