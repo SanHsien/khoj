@@ -87,7 +87,20 @@ def check_document(path: Path) -> list[str]:
     return problems
 
 
+def tolerate_unencodable_output() -> None:
+    """Never let the console's code page decide whether a finished check succeeds.
+
+    Piped on Windows, stdout uses the ANSI code page, but the summary line (and any
+    file name or link text it echoes) is Chinese. Unencodable characters become `?` on
+    the console instead of raising UnicodeEncodeError mid-report.
+    """
+    reconfigure = getattr(sys.stdout, "reconfigure", None)
+    if callable(reconfigure):
+        reconfigure(errors="replace")
+
+
 def main() -> int:
+    tolerate_unencodable_output()
     documents = iter_documents()
     if not documents:
         print("找不到任何維護用 Markdown 檔")
