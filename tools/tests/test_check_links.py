@@ -62,3 +62,16 @@ def test_angle_bracket_destination_with_spaces_and_a_title(doc, tmp_path: Path) 
 
 def test_a_broken_image_is_reported_once(doc) -> None:
     assert len(doc("![alt](missing.png)")) == 1
+
+
+def test_every_markdown_file_under_docs_is_checked(monkeypatch, tmp_path: Path) -> None:
+    """A document added to docs/ must not need a second edit to be link-checked."""
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "README.md").write_text("hi\n", encoding="utf-8")
+    (tmp_path / "docs" / "NEW.md").write_text("[x](gone.md)\n", encoding="utf-8")
+    monkeypatch.setattr(check_links, "ROOT", tmp_path)
+    monkeypatch.setattr(check_links, "MAINTAINED_DOCUMENTS", ("README.md",))
+
+    documents = check_links.iter_documents()
+
+    assert tmp_path / "docs" / "NEW.md" in documents

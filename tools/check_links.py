@@ -46,13 +46,15 @@ def iter_documents() -> list[Path]:
     if missing:
         raise FileNotFoundError("maintained documents missing: " + ", ".join(missing))
     extra = []
-    github = ROOT / ".github"
-    if github.is_dir():
-        extra.extend(
-            path
-            for path in github.rglob("*.md")
-            if path.is_file() and path.name not in SKIP_NAMES
-        )
+    # Any Markdown under docs/ is maintained documentation: a new file there must not
+    # need a second edit to this list before its links are checked.
+    for folder, pattern in ((ROOT / ".github", "**/*.md"), (ROOT / "docs", "*.md")):
+        if folder.is_dir():
+            extra.extend(
+                path
+                for path in sorted(folder.glob(pattern))
+                if path.is_file() and path.name not in SKIP_NAMES
+            )
     required = [ROOT / relative for relative in MAINTAINED_DOCUMENTS]
     seen = {path.resolve() for path in required}
     for path in extra:
