@@ -45,3 +45,20 @@ def test_html_anchor_href_to_a_missing_file_is_reported(doc) -> None:
 def test_external_and_fragment_hrefs_are_not_treated_as_files(doc) -> None:
     body = '<a href="https://example.com/x">a</a> <a href="#top">b</a> <a href="mailto:a@b.c">c</a>'
     assert doc(body) == []
+
+
+def test_a_link_title_is_not_part_of_the_path(doc) -> None:
+    """`[text](path "title")` is valid Markdown and points at `path`."""
+    assert doc('[ok](exists.md "A title")') == []
+    problems = doc('[bad](missing.md "A title")')
+    assert len(problems) == 1
+    assert "missing.md" in problems[0]
+
+
+def test_angle_bracket_destination_with_spaces_and_a_title(doc, tmp_path: Path) -> None:
+    (tmp_path / "my file.md").write_text("x\n", encoding="utf-8")
+    assert doc('[ok](<my file.md> "t")') == []
+
+
+def test_a_broken_image_is_reported_once(doc) -> None:
+    assert len(doc("![alt](missing.png)")) == 1

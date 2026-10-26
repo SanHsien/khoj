@@ -62,8 +62,21 @@ def iter_documents() -> list[Path]:
     return required
 
 
+def _destination(raw: str) -> str:
+    """The path part of `(...)` in `[text](...)`, without the optional title.
+
+    `[t](path "title")` points at `path`. Only an angle-bracketed destination may
+    contain spaces, so a bare destination ends at the first whitespace.
+    """
+    raw = raw.strip()
+    if raw.startswith("<"):
+        end = raw.find(">")
+        return raw[1:end] if end != -1 else raw[1:]
+    return raw.split(None, 1)[0] if raw else ""
+
+
 def _missing_relative(path: Path, target: str) -> str | None:
-    target = target.strip().strip("<>")
+    target = _destination(target)
     if not target or target.startswith(SKIP_PREFIXES):
         return None
     file_part = unquote(target.split("#", 1)[0])
@@ -85,7 +98,8 @@ def check_document(path: Path) -> list[str]:
     for pattern in (LINK_PATTERN, IMAGE_PATTERN, HTML_SRC_PATTERN, HTML_HREF_PATTERN):
         for match in pattern.finditer(text):
             missing = _missing_relative(path, match.group(1))
-            if missing:
+            # `![a](x)` also matches the plain-link pattern; report a link once.
+            if missing and missing not in problems:
                 problems.append(missing)
     return problems
 
