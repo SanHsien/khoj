@@ -7,8 +7,8 @@ contains markup, so the one value that is HTML on purpose -- an automation resul
 has already been through the markdown renderer -- has to be marked safe explicitly.
 Otherwise every automation mail shows literal `<p>` tags.
 
-Only Jinja is real here. Django, Resend and the markdown renderer are stubs, so the
-test needs nothing but `requirements-dev.txt`.
+Jinja and the markdown renderer are real. Django and Resend are stubs, so the test needs
+nothing but `requirements-dev.txt`.
 """
 
 from __future__ import annotations
@@ -30,11 +30,6 @@ EMAIL_ROUTER = SRC / "khoj" / "routers" / "email.py"
 sys.path.insert(0, str(SRC))
 
 
-class _FakeMarkdownIt:
-    def render(self, text: str) -> str:
-        return f"<p>{text}</p>\n"
-
-
 @pytest.fixture
 def mail(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     """Load the real email router with Resend enabled; return the mails it "sent"."""
@@ -47,8 +42,6 @@ def mail(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     django = types.ModuleType("django")
     django_conf = types.ModuleType("django.conf")
     django_conf.settings = types.SimpleNamespace(BASE_DIR=str(tmp_path))
-    markdown_it = types.ModuleType("markdown_it")
-    markdown_it.MarkdownIt = _FakeMarkdownIt
     helpers = types.ModuleType("khoj.utils.helpers")
     helpers.is_none_or_empty = lambda value: value is None or value == ""
 
@@ -56,7 +49,6 @@ def mail(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
         "resend": resend,
         "django": django,
         "django.conf": django_conf,
-        "markdown_it": markdown_it,
         "khoj.utils.helpers": helpers,
     }.items():
         monkeypatch.setitem(sys.modules, name, module)
@@ -107,3 +99,55 @@ def test_feedback_mail_escapes_user_and_model_text(mail) -> None:
     assert "<script>reply</script>" not in html
     assert "<b>query</b>" not in html
     assert "&lt;b&gt;query&lt;/b&gt;" in html
+
+
+UNTRUSTED_RESULT = (
+    "Hello <img src=https://x/t.png> <script>alert(1)</script> "
+    "<a href=javascript:alert(1)>click</a> "
+    "<a href=\"https://evil.example\">phish</a>"
+)
+
+
+def test_raw_html_in_an_automation_result_does_not_reach_the_mail_as_markup(mail) -> None:
+    """The result comes from a model reading web pages; it is not trusted markup.
+
+    `result` is marked safe so that the rendered markdown survives, which means whatever
+    the renderer lets through goes into the mail verbatim. The renderer must therefore
+    not pass raw HTML.
+    """
+    router, sent = mail
+
+    router.send_task_email("Ada", "ada@example.com", "q", UNTRUSTED_RESULT, "Digest")
+
+    html = sent[0]["html"]
+    assert "<script>" not in html
+    assert "<img src=https://x/t.png>" not in html
+    assert "<a href=javascript:alert(1)>" not in html
+    assert '<a href="https://evil.example">' not in html
+    # Escaped, not dropped: the reader can still see what the model wrote.
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html
+
+
+def test_markdown_syntax_in_an_automation_result_still_renders(mail) -> None:
+    router, sent = mail
+
+    router.send_task_email(
+        "Ada",
+        "ada@example.com",
+        "q",
+        "**bold** and a [link](https://example.com/a)\n\n- one\n- two\n",
+        "Digest",
+    )
+
+    html = sent[0]["html"]
+    assert "<strong>bold</strong>" in html
+    assert '<a href="https://example.com/a">link</a>' in html
+    assert "<li>one</li>" in html
+
+
+def test_markdown_link_with_a_javascript_url_is_not_rendered_as_a_link(mail) -> None:
+    router, sent = mail
+
+    router.send_task_email("Ada", "ada@example.com", "q", "[x](javascript:alert(1))", "Digest")
+
+    assert 'href="javascript:' not in sent[0]["html"]

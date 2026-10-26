@@ -396,11 +396,15 @@ Docusaurus 3.10.2（npm `latest`）仍宣告 `update-notifier ^6.0.2`，無法�
 新增的 job 若沒有自己的 `if:` 仍會過；改成逐 job 檢查所有非 fork 自寫的 workflow（連同日後同步進來的新 workflow）。
 刻意移除 `dockerize.yml` `manifest` 的閘門，偵測器會點名。
 
+**已處理（維護者授權代決）：自動化信不放行原始 HTML**。`task.html` 的 `result` 標為安全後，渲染它的
+`MarkdownIt()` 預設（commonmark）放行原始 HTML，模型輸出或網頁內容裡的 `<script>`、`<img src=…>` 追蹤圖片、
+`<a href=javascript:…>` 會原樣進信。`send_task_email` 改用 `MarkdownIt("commonmark", {"html": False})`：原始 HTML 被跳脫成可讀文字，
+Markdown 語法（粗體、清單、連結、`![]()` 圖片）照常渲染；markdown-it 本身不渲染 `javascript:` 連結。
+取捨：模型若刻意輸出 HTML 標籤，信裡會看到標籤原文，不再渲染。重現測試在 `tools/tests/test_email_rendering.py`
+（`markdown-it-py` 進 `requirements-dev.txt`，測試改用真的渲染器）。
+
 **刻意不修（需維護者決定或超出範圍）**
 
-- `task.html` 的 `result` 現在標為安全，與開 autoescape 之前一致；但 `markdown_it.MarkdownIt()` 預設放行原始 HTML，
-  自動化結果（模型輸出／網頁內容）裡的 `<a>`、追蹤圖片會原樣進信。改成 `MarkdownIt("commonmark", {"html": False})`
-  更嚴，但會改變產品行為。觸發條件：實際啟用 Resend 寄信時。
 - `documentation/package.json` 的 `"picomatch": ">=2.3.2"`（初始提交就有）讓所有 `picomatch@^2` 的依賴方解析到 4.0.7，
   正是 2026-09-29 條目警告過的 `>=` 風險；目前建置通過，改動風險大於收益。觸發條件：文件站建置壞掉，或下次動 resolutions 時改成 `^4`。
 - `grep_files` 剝除 `\b` 的正規式遇到字元類 `[\b]x` 會留下 `[]x`（Postgres 報錯）；來自採用的上游 #1441，模型少寫這種式子。觸發條件：日誌出現。

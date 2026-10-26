@@ -130,7 +130,9 @@ def send_task_email(name, email, query, result, subject, is_image=False):
         image = result.get("image")
         result = f"![{subject}]({image})"
 
-    html_result = markdown_it.MarkdownIt().render(result)
+    # `result` is model output built from web content, and task.html marks the rendered HTML safe.
+    # Do not let raw HTML through the renderer: it is escaped, markdown syntax still renders.
+    html_result = markdown_it.MarkdownIt("commonmark", {"html": False}).render(result)
     html_content = template.render(name=name, subject=subject, query=query, result=html_result)
 
     r = resend.Emails.send(
