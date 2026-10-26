@@ -18,6 +18,7 @@ import argparse
 import json
 import os
 import re
+import sys
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -259,7 +260,21 @@ def write_github_output(rows: list[dict[str, object]], report_path: Path) -> Non
         output.write(f"report_path={report_path.as_posix()}\n")
 
 
+def tolerate_unencodable_output() -> None:
+    """Never let the console's code page decide whether a finished check succeeds.
+
+    Piped on Windows, stdout uses the ANSI code page, but deferral reasons are written
+    in Chinese. Printing one raised UnicodeEncodeError *after* the UTF-8 report file was
+    written, ending a complete check in a traceback. Unencodable characters become `?`
+    on the console only.
+    """
+    reconfigure = getattr(sys.stdout, "reconfigure", None)
+    if callable(reconfigure):
+        reconfigure(errors="replace")
+
+
 def main() -> int:
+    tolerate_unencodable_output()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", default="dependency-freshness-report.md")
     parser.add_argument(

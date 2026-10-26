@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 import json
 import sys
 from pathlib import Path
@@ -97,3 +98,30 @@ def test_report_names_both_exits_so_the_next_person_does_not_invent_a_third() ->
     assert "freshness-hold:" in report
     assert "dependency-deferrals.json" in report
     assert "mute button" in report
+
+
+def test_report_with_a_non_ascii_deferral_reason_survives_a_legacy_console(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Deferral reasons are written in Chinese; piped on Windows the console is not UTF-8.
+
+    The report file is UTF-8 and complete, so a UnicodeEncodeError from the print that
+    follows only turns a finished check into a traceback and a failing exit code.
+    """
+    console = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
+    monkeypatch.setattr(sys, "stdout", console)
+    monkeypatch.setattr(
+        sys, "argv", ["check_dependency_freshness.py", "--output", str(tmp_path / "r.md")]
+    )
+    monkeypatch.setattr(
+        checker,
+        "load_direct_dependencies",
+        lambda: checker.parse_requirements("pytest>=8.3", "requirements-dev.txt"),
+    )
+    monkeypatch.setattr(
+        checker, "load_deferrals", lambda: {"pytest": ("9.1", "已看過，這個月不升")}
+    )
+    monkeypatch.setattr(checker, "fetch_pypi_version", lambda name: "9.1.0")
+
+    assert checker.main() == 0
+    assert "已看過" in (tmp_path / "r.md").read_text(encoding="utf-8")
