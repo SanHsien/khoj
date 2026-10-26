@@ -125,3 +125,33 @@ def test_report_with_a_non_ascii_deferral_reason_survives_a_legacy_console(
 
     assert checker.main() == 0
     assert "已看過" in (tmp_path / "r.md").read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("spelling", ["typing_extensions", "Typing.Extensions", "typing-extensions"])
+def test_a_deferral_applies_whichever_way_the_package_name_is_spelled(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, spelling: str
+) -> None:
+    """PyPI treats `-`, `_` and `.` as the same character; so must the deferral lookup.
+
+    A deferral that silently fails to match leaves the report red for a package that was
+    already reviewed, which teaches people to ignore the red.
+    """
+    path = tmp_path / "dependency-deferrals.json"
+    path.write_text(
+        json.dumps({"deferrals": {spelling: {"deferredLatest": "4.12.2", "reason": "reviewed"}}}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(checker, "fetch_pypi_version", lambda name: "4.12.2")
+    packages = checker.parse_requirements("typing-extensions>=4.0", "requirements-dev.txt")
+
+    rows = checker.collect_status(packages, deferrals=checker.load_deferrals(path))
+
+    assert rows[0]["outdated"] is True
+    assert checker.needs_review(rows[0]) is False
+
+
+def test_the_same_package_declared_under_two_spellings_is_listed_once(tmp_path: Path) -> None:
+    (tmp_path / "requirements-dev.txt").write_text(
+        "zope.interface>=6\nzope_interface>=6\n", encoding="utf-8"
+    )
+    assert [p["name"] for p in checker.load_direct_dependencies(tmp_path)] == ["zope.interface"]
