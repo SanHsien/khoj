@@ -20,6 +20,12 @@ HTML_SRC_PATTERN = re.compile(r"""(?is)<img[^>]+src=["']([^"']+)["']""")
 # READMEs switch language with `<a href="README.en.md">`; Markdown syntax is not the only
 # way to write a link, and an unchecked syntax is a link that can rot unnoticed.
 HTML_HREF_PATTERN = re.compile(r"""(?is)<a\s[^>]*?href=["']([^"']+)["']""")
+# Documentation that explains link syntax shows it in code, and code is not a link.
+# An unclosed fence runs to the end of the document, as in CommonMark.
+FENCED_CODE = re.compile(
+    r"^ {0,3}(`{3,}|~{3,})[^\n]*\n.*?(?:^ {0,3}\1[`~]*[ \t]*$|\Z)", re.DOTALL | re.MULTILINE
+)
+INLINE_CODE = re.compile(r"(`+)(?!`)[^\n]+?(?<!`)\1(?!`)")
 SKIP_PREFIXES = ("http://", "https://", "mailto:", "tel:", "#")
 SKIP_NAMES = {
     "upstream-review-report.md",
@@ -96,7 +102,7 @@ def _missing_relative(path: Path, target: str) -> str | None:
 
 def check_document(path: Path) -> list[str]:
     problems: list[str] = []
-    text = path.read_text(encoding="utf-8")
+    text = INLINE_CODE.sub("", FENCED_CODE.sub("", path.read_text(encoding="utf-8")))
     for pattern in (LINK_PATTERN, IMAGE_PATTERN, HTML_SRC_PATTERN, HTML_HREF_PATTERN):
         for match in pattern.finditer(text):
             missing = _missing_relative(path, match.group(1))

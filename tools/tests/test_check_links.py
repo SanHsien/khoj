@@ -29,9 +29,15 @@ def doc(tmp_path: Path):
     return check
 
 
-def test_summary_survives_a_console_that_cannot_encode_chinese(monkeypatch) -> None:
+def test_summary_survives_a_console_that_cannot_encode_chinese(
+    monkeypatch, tmp_path: Path
+) -> None:
     """Piped on Windows the console is the ANSI code page, and the summary is Chinese."""
+    (tmp_path / "README.md").write_text("no links here\n", encoding="utf-8")
+    monkeypatch.setattr(check_links, "ROOT", tmp_path)
+    monkeypatch.setattr(check_links, "MAINTAINED_DOCUMENTS", ("README.md",))
     monkeypatch.setattr(sys, "stdout", io.TextIOWrapper(io.BytesIO(), encoding="cp1252"))
+
     assert check_links.main() == 0
 
 
@@ -75,3 +81,35 @@ def test_every_markdown_file_under_docs_is_checked(monkeypatch, tmp_path: Path) 
     documents = check_links.iter_documents()
 
     assert tmp_path / "docs" / "NEW.md" in documents
+
+
+def test_link_syntax_inside_code_is_an_example_not_a_link(doc) -> None:
+    """Docs describe link syntax in backticks and fences; that text is not a link."""
+    body = (
+        "Write `[text](gone.md)` or `<a href=\"gone.md\">` to link.\n"
+        "\n"
+        "```markdown\n"
+        "[text](gone.md)\n"
+        "```\n"
+        "\n"
+        "~~~\n"
+        "![alt](gone.png)\n"
+        "~~~\n"
+    )
+    assert doc(body) == []
+
+
+def test_a_real_link_next_to_code_is_still_checked(doc) -> None:
+    body = "Use `[a](gone.md)` but see [this](missing.md) and [that](exists.md).\n"
+    problems = doc(body)
+    assert len(problems) == 1
+    assert "missing.md" in problems[0]
+
+
+def test_link_text_that_is_code_still_counts_as_a_link(doc) -> None:
+    assert doc("[`exists.md`](exists.md)\n") == []
+    assert len(doc("[`gone.md`](gone.md)\n")) == 1
+
+
+def test_an_unclosed_fence_hides_the_rest_of_the_document_like_markdown_does(doc) -> None:
+    assert doc("```\n[x](gone.md)\n") == []
