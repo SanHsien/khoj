@@ -15,7 +15,7 @@
 
         <div style="background-color: #f8f9fa; border-left: 4px solid #FFA07A; padding: 15px; margin-bottom: 20px;">
             <h3 style="color: #2c3e50; margin-top: 0;">{{ subject }}</h3>
-            <p style="margin-bottom: 0;">{{ result }}</p>
+            <p style="margin-bottom: 0;">{# result is markdown already rendered to HTML by send_task_email; autoescape would show it as literal tags #}{{ result|safe }}</p>
         </div>
 
         <div style="font-size: 14px; color: #666; margin-bottom: 20px;">
