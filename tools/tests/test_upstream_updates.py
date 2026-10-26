@@ -85,6 +85,61 @@ def test_gh_failure_reports_unchecked_rather_than_empty(monkeypatch):
     assert checker.collect_new_tickets(BASELINE, "issue") is None
 
 
+def test_missing_gh_executable_reports_unchecked_rather_than_crashing(monkeypatch):
+    """A machine without `gh` must get "Not checked", not a traceback.
+
+    `subprocess.run` raises FileNotFoundError when the executable is absent, which is
+    not a non-zero exit code; without a handler the report file is never written and
+    the process dies with exit 1 -- the code `--strict` uses for "work to review".
+    """
+
+    def runner(args, **kwargs):
+        raise FileNotFoundError(2, "No such file or directory", "gh")
+
+    monkeypatch.setattr(checker.subprocess, "run", runner)
+    assert checker.collect_new_tickets(BASELINE, "pr") is None
+
+
+def test_missing_git_executable_is_a_check_error_not_a_traceback(monkeypatch, tmp_path):
+    def runner(args, **kwargs):
+        raise FileNotFoundError(2, "No such file or directory", "git")
+
+    monkeypatch.setattr(checker.subprocess, "run", runner)
+    with pytest.raises(checker.UpstreamCheckError, match="could not run"):
+        checker.run_git(["status"], tmp_path)
+
+
+def _run_main(monkeypatch, tmp_path, *, commits, prs, issues, argv=()):
+    output = tmp_path / "report.md"
+    monkeypatch.setattr(sys, "argv", ["check_upstream_updates.py", "--output", str(output), *argv])
+    monkeypatch.setattr(checker, "load_baseline", lambda: BASELINE)
+    monkeypatch.setattr(checker, "fetch_upstream", lambda baseline, repo_dir: "refs/x")
+    monkeypatch.setattr(checker, "collect_new_commits", lambda baseline, repo_dir, ref: commits)
+    monkeypatch.setattr(
+        checker, "collect_new_tickets", lambda baseline, kind: prs if kind == "pr" else issues
+    )
+    return checker.main(), output.read_text(encoding="utf-8")
+
+
+def test_unenumerable_tickets_fail_closed_with_exit_code_two(monkeypatch, tmp_path):
+    """The exit code is the only thing a scheduler reads; "unknown" must not be 0."""
+    code, report = _run_main(monkeypatch, tmp_path, commits=[], prs=None, issues=[])
+    assert code == 2
+    assert "Not checked" in report
+
+
+def test_strict_exit_code_distinguishes_work_to_review_from_a_broken_check(
+    monkeypatch, tmp_path
+):
+    ticket = [{"number": 9, "title": "t"}]
+    code, _ = _run_main(
+        monkeypatch, tmp_path, commits=[], prs=ticket, issues=[], argv=("--strict",)
+    )
+    assert code == 1
+    code, _ = _run_main(monkeypatch, tmp_path, commits=[], prs=[], issues=[], argv=("--strict",))
+    assert code == 0
+
+
 def test_report_says_so_when_tickets_could_not_be_enumerated():
     report = checker.render_markdown(BASELINE, [], prs=None, issues=None)
     assert "Not checked" in report
