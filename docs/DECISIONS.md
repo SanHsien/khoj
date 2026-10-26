@@ -347,3 +347,27 @@ reproduction（含 `Set-Cookie` 與 `Cache-Control: max-stale=31536000`）都取
 2. **移除依賴鏈**：先產生候選 manifest 與 lockfile，再用 dependency graph 確認
    `http-cache-semantics` 已完全不存在；此路徑不要求載入已移除的套件跑 reproduction，之後跑
    文件站 build 與 Windows 維護 gate。
+
+## 2026-10-26（續）：以 `update-notifier` resolution 移除 `http-cache-semantics` 依賴鏈（Alert #245）
+
+上一條記錄的第 2 條驗收路徑（移除依賴鏈）實測可行，已執行。
+
+**依賴圖**：`documentation/yarn.lock` 裡 `http-cache-semantics` 只有一條來路：
+`@docusaurus/core 3.10.2` → `update-notifier ^6.0.2` → `latest-version 7` → `package-json 8.1.1`
+→ `got 12.6.1` → `cacheable-request 10.2.14` → `http-cache-semantics 4.2.0`。
+Docusaurus 3.10.2（npm `latest`）仍宣告 `update-notifier ^6.0.2`，無法靠升級 Docusaurus 解決。
+
+**決定**：在 `documentation/package.json` 的 `resolutions` 加 `"update-notifier": "^7.3.1"`。
+`update-notifier 7.3.1` → `latest-version 9` → `package-json 10.0.1`（改用 `ky`，不再用 `got`）。
+這與 Docusaurus 4.0.0-canary 自己宣告的 `update-notifier ^7.3.1` 相同，不是自創組合；
+`@docusaurus/core` 3.10.2 只在 `bin/beforeCli.mjs` 用它做版本更新提示。
+
+**變更範圍**：`yarn.lock` 只動 `update-notifier` 子樹（`got`、`cacheable-request`、`http-cache-semantics`、
+`@types/http-cache-semantics` 等移除；`boxen`、`configstore`、`dot-prop`、`ky` 等隨 `update-notifier` 7 更新）。
+`grep -c http-cache-semantics documentation/yarn.lock` 為 0。
+
+**驗證**：`yarn install --frozen-lockfile`（yarn 1.22.22）通過；`yarn build` 於 Node 26 完成並產出靜態檔
+（exit 0）。沒有載入已移除的套件跑 reproduction，依上一條第 2 條路徑不需要。
+
+**警示狀態**：#245 在這個變更推上 `main` 且 GitHub 重新掃描前仍是 open；不 dismiss，
+推送後以 `gh api repos/SanHsien/khoj/dependabot/alerts/245` 查證是否自動轉為 fixed。
