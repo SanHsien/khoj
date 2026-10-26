@@ -14,7 +14,7 @@ python tools\check_upstream_updates.py --strict
 ```
 
 工具以 `tools/upstream_baseline.json` 的 `reviewed_through` 為起點，列出所有未審查提交。
-有新提交或檢查失敗時，`--strict` 回傳非零；排程 workflow 也會因此明確失敗。
+有新提交、新 PR 或 issue 時，`--strict` 回傳 1（待審）；PR 或 issue 清單、git 或 `gh` 沒跑成時回傳 2（檢查本身失敗，不是「沒有待審」）。排程 workflow 兩種都會明確失敗。
 
 CI 沒有 `upstream` remote，所以 baseline 的 `repo` 寫完整 clone URL，不要寫遠端短名。
 

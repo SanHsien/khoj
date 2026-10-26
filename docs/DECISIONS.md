@@ -371,3 +371,45 @@ Docusaurus 3.10.2（npm `latest`）仍宣告 `update-notifier ^6.0.2`，無法�
 
 **警示狀態**：#245 在這個變更推上 `main` 且 GitHub 重新掃描前仍是 open；不 dismiss，
 推送後以 `gh api repos/SanHsien/khoj/dependabot/alerts/245` 查證是否自動轉為 fixed。
+
+## 2026-10-27：深度掃描 fork 自有程式（維護工具、workflow、產品 overlay、文件站依賴）
+
+只看 fork 自己加或改過的東西；上游原封不動的產品碼不在範圍。每個缺陷先寫在修前會失敗的重現測試。
+`tools\dev_check.ps1` 全綠（71 項測試）。
+
+**已修（重現測試都在 `tools/tests/`，每個都實跑過「修前紅、修後綠」）**
+
+| 缺陷 | 輸入／情境 → 錯成什麼 | commit |
+| --- | --- | --- |
+| 遙測伺服器啟動即崩 | `src/telemetry/telemetry.py` 匯入 `khoj.utils.security`，但遙測映像只複製該目錄（`COPY telemetry.py /app/main.py`）→ `ModuleNotFoundError: khoj`。改為內嵌同一支函式，並測試「兩份行為一致」 | `5621f81d` |
+| 自動化寄信內容變成字面 HTML | fork 開了 Jinja autoescape，但 `task.html` 印的 `result` 已被 `send_task_email` 轉成 HTML → 每封自動化信的內文顯示 `<p>…</p>` 原文。`result` 改 `\|safe`，`subject`／`query`／`name`／回饋文字仍跳脫。`jinja2` 進 `requirements-dev.txt` | `62cc7046` |
+| `bootstrap_dev.ps1` 在 gate 失敗後仍宣告「維護環境可用」且 exit 0 | PowerShell 不會因原生指令的非零 exit code 停下；`& pwsh … dev_check.ps1` 沒檢查。三個原生步驟都補檢查並 `throw` | `44ead7de` |
+| 上游檢查在沒有 `gh`／`git` 的機器上崩潰 | `subprocess.run` 對不存在的執行檔丟 `FileNotFoundError`，不是非零 exit code → 沒寫報告、exit 1（`--strict` 的「有待審」），不是 fail-closed 的 2。改為「Not checked」／`UpstreamCheckError`；順手補上 exit code 契約測試（2／1／0） | `461fd5d4` |
+| 三支工具在管線／非 UTF-8 主控台輸出時崩潰 | stdout 被導向時 Windows 用 ANSI 碼頁；上游 PR 標題（emoji／CJK）、deferral 理由與 `check_links` 摘要（中文）在報告檔寫完**之後**的 `print` 拋 `UnicodeEncodeError`。三支各自在 `main` 開頭把 stdout 設為 `errors="replace"`，報告檔不受影響 | `816200ae`、`bf0bd10e`、`4a320d0b` |
+| 依賴新鮮度的 deferral 比對不認 `_`／`.` | PyPI 視 `-_.` 為同一字元，查找卻只 `lower()` → `typing_extensions` 這種 key 對不上 `typing-extensions`，已審查的套件報告仍是紅燈。統一 PEP 503 正規化（deferral key、查找、重複過濾） | `6c730132` |
+| 連結檢查漏看 `<a href>` | README 語言切換是 `<a href="README.en.md">`，壞了也綠 | `f40d58a5` |
+| 連結檢查對 `[t](path "title")`、`<path> "title"` 誤報找不到；壞圖片重複列兩次 | 把標題當成路徑的一部分 | `f2965327` |
+| 連結檢查把程式碼範例當成連結 | 反引號或 fenced code 裡寫的 `[text](path)`、`<a href>` 被報成找不到檔（寫這份說明時 gate 就被它擋下）。比對前先剝掉 code span／fence；連結文字本身是 code 的連結仍檢查 | `c3c1f128` |
+| 連結檢查不看 `docs/` 新檔 | 清單是手寫的，新增文件要再改一次才會被檢查；改為列舉 `docs/*.md` | `43b14677` |
+
+**補測試（沒有現存缺陷）**：`tools/tests/test_workflow_gates.py`——`test_fork_docs` 只確認閘門字串出現在檔案裡，
+新增的 job 若沒有自己的 `if:` 仍會過；改成逐 job 檢查所有非 fork 自寫的 workflow（連同日後同步進來的新 workflow）。
+刻意移除 `dockerize.yml` `manifest` 的閘門，偵測器會點名。
+
+**刻意不修（需維護者決定或超出範圍）**
+
+- `task.html` 的 `result` 現在標為安全，與開 autoescape 之前一致；但 `markdown_it.MarkdownIt()` 預設放行原始 HTML，
+  自動化結果（模型輸出／網頁內容）裡的 `<a>`、追蹤圖片會原樣進信。改成 `MarkdownIt("commonmark", {"html": False})`
+  更嚴，但會改變產品行為。觸發條件：實際啟用 Resend 寄信時。
+- `documentation/package.json` 的 `"picomatch": ">=2.3.2"`（初始提交就有）讓所有 `picomatch@^2` 的依賴方解析到 4.0.7，
+  正是 2026-09-29 條目警告過的 `>=` 風險；目前建置通過，改動風險大於收益。觸發條件：文件站建置壞掉，或下次動 resolutions 時改成 `^4`。
+- `grep_files` 剝除 `\b` 的正規式遇到字元類 `[\b]x` 會留下 `[]x`（Postgres 報錯）；來自採用的上游 #1441，模型少寫這種式子。觸發條件：日誌出現。
+- `generate_summary_from_files`（採用 #1444 的函式）目前沒有任何呼叫端，該修正沒有任何執行路徑覆蓋。觸發條件：上游接回呼叫端。
+- 連結檢查仍不驗證 Windows 上的大小寫（Ubuntu 的 CI 會抓到）、也不解析 reference-style 連結。
+
+**文件同步**：`FORK.md` 的 overlay 清單補齊（原本只列三項，實際還有日誌防護、Groq 主機比對、autoescape、暫存檔關檔等），
+`docs/UPSTREAM.md` 寫明 `--strict` 的 exit 1／2 意義。
+
+**驗證**：文件站 `yarn.lock` 以腳本檢查依賴閉包（2578 條依賴參照、0 條缺漏）；`update-notifier` 7.3.1 實際下載並比對
+`@docusaurus/core` 3.10.2 的 `bin/beforeCli.mjs` 用到的成員（`config`、`check()`、`update`），都存在；`uv lock --check` 通過；
+`CrossEncoder`／`predict` 的 `model_name_or_path`、`activation_fn` 在 `sentence-transformers` 6.2.0 的 wheel 內確認存在。
