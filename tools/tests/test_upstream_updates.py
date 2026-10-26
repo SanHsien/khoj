@@ -6,6 +6,7 @@ to stop watching upstream.
 
 from __future__ import annotations
 
+import io
 import json
 import subprocess
 import sys
@@ -138,6 +139,30 @@ def test_strict_exit_code_distinguishes_work_to_review_from_a_broken_check(
     assert code == 1
     code, _ = _run_main(monkeypatch, tmp_path, commits=[], prs=[], issues=[], argv=("--strict",))
     assert code == 0
+
+
+def test_report_survives_a_console_that_cannot_encode_ticket_titles(monkeypatch, tmp_path):
+    """Piped output on Windows uses the ANSI code page, not UTF-8.
+
+    Titles are written by strangers and often carry emoji or CJK. The report file is
+    UTF-8 and complete either way; failing the *print* afterwards turned a finished
+    check into a traceback with the wrong exit code.
+    """
+    console = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
+    monkeypatch.setattr(sys, "stdout", console)
+    title = "✨ fix 修正"
+
+    code, report = _run_main(
+        monkeypatch,
+        tmp_path,
+        commits=[],
+        prs=[{"number": 9, "title": title}],
+        issues=[],
+        argv=("--strict",),
+    )
+
+    assert code == 1
+    assert title in report
 
 
 def test_report_says_so_when_tickets_could_not_be_enumerated():

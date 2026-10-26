@@ -16,6 +16,7 @@ import argparse
 import json
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -283,7 +284,21 @@ def render_markdown(
     return with_tickets(lines)
 
 
+def tolerate_unencodable_output() -> None:
+    """Never let the console's code page decide whether a finished check succeeds.
+
+    Piped on Windows, stdout uses the ANSI code page. Ticket titles are written by
+    strangers and carry emoji and CJK; printing one raised UnicodeEncodeError *after*
+    the report file was written, turning a complete check into a traceback with the
+    wrong exit code. Unencodable characters become `?` on the console only.
+    """
+    reconfigure = getattr(sys.stdout, "reconfigure", None)
+    if callable(reconfigure):
+        reconfigure(errors="replace")
+
+
 def main() -> int:
+    tolerate_unencodable_output()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", default="upstream-review-report.md")
     parser.add_argument("--repo-dir", type=Path, default=REPO_ROOT)
