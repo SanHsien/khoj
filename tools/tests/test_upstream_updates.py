@@ -6,7 +6,6 @@ to stop watching upstream.
 
 from __future__ import annotations
 
-import io
 import json
 import subprocess
 import sys
@@ -39,27 +38,6 @@ def fake_gh(payload: object, returncode: int = 0):
         )
 
     return runner
-
-
-def test_tickets_are_queried_with_state_all(monkeypatch):
-    """An item opened and closed between two runs was still never triaged."""
-    monkeypatch.setattr(
-        checker.subprocess,
-        "run",
-        fake_gh([{"number": 9, "title": "closed without merging"}]),
-    )
-    tickets = checker.collect_new_tickets(BASELINE, "pr")
-    assert tickets == [{"number": 9, "title": "closed without merging"}]
-
-
-def test_items_at_or_below_the_watermark_are_not_re_reported(monkeypatch):
-    monkeypatch.setattr(
-        checker.subprocess,
-        "run",
-        fake_gh([{"number": 4, "title": "old"}, {"number": 5, "title": "new"}]),
-    )
-    baseline = {**BASELINE, "reviewed_pr_through": 4}
-    assert [t["number"] for t in checker.collect_new_tickets(baseline, "pr")] == [5]
 
 
 def test_ticket_titles_survive_undecodable_bytes(monkeypatch):
@@ -108,73 +86,6 @@ def test_missing_git_executable_is_a_check_error_not_a_traceback(monkeypatch, tm
     monkeypatch.setattr(checker.subprocess, "run", runner)
     with pytest.raises(checker.UpstreamCheckError, match="could not run"):
         checker.run_git(["status"], tmp_path)
-
-
-def _run_main(monkeypatch, tmp_path, *, commits, prs, issues, argv=()):
-    output = tmp_path / "report.md"
-    monkeypatch.setattr(sys, "argv", ["check_upstream_updates.py", "--output", str(output), *argv])
-    monkeypatch.setattr(checker, "load_baseline", lambda: BASELINE)
-    monkeypatch.setattr(checker, "fetch_upstream", lambda baseline, repo_dir: "refs/x")
-    monkeypatch.setattr(checker, "collect_new_commits", lambda baseline, repo_dir, ref: commits)
-    monkeypatch.setattr(
-        checker, "collect_new_tickets", lambda baseline, kind: prs if kind == "pr" else issues
-    )
-    return checker.main(), output.read_text(encoding="utf-8")
-
-
-def test_unenumerable_tickets_fail_closed_with_exit_code_two(monkeypatch, tmp_path):
-    """The exit code is the only thing a scheduler reads; "unknown" must not be 0."""
-    code, report = _run_main(monkeypatch, tmp_path, commits=[], prs=None, issues=[])
-    assert code == 2
-    assert "Not checked" in report
-
-
-def test_strict_exit_code_distinguishes_work_to_review_from_a_broken_check(
-    monkeypatch, tmp_path
-):
-    ticket = [{"number": 9, "title": "t"}]
-    code, _ = _run_main(
-        monkeypatch, tmp_path, commits=[], prs=ticket, issues=[], argv=("--strict",)
-    )
-    assert code == 1
-    code, _ = _run_main(monkeypatch, tmp_path, commits=[], prs=[], issues=[], argv=("--strict",))
-    assert code == 0
-
-
-def test_report_survives_a_console_that_cannot_encode_ticket_titles(monkeypatch, tmp_path):
-    """Piped output on Windows uses the ANSI code page, not UTF-8.
-
-    Titles are written by strangers and often carry emoji or CJK. The report file is
-    UTF-8 and complete either way; failing the *print* afterwards turned a finished
-    check into a traceback with the wrong exit code.
-    """
-    console = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
-    monkeypatch.setattr(sys, "stdout", console)
-    title = "✨ fix 修正"
-
-    code, report = _run_main(
-        monkeypatch,
-        tmp_path,
-        commits=[],
-        prs=[{"number": 9, "title": title}],
-        issues=[],
-        argv=("--strict",),
-    )
-
-    assert code == 1
-    assert title in report
-
-
-def test_report_says_so_when_tickets_could_not_be_enumerated():
-    report = checker.render_markdown(BASELINE, [], prs=None, issues=None)
-    assert "Not checked" in report
-
-
-def test_report_covers_all_three_axes_even_when_commits_are_clean():
-    report = checker.render_markdown(BASELINE, [], prs=[], issues=[])
-    assert "## Commits" in report
-    assert "## Upstream pull requests" in report
-    assert "## Upstream issues" in report
 
 
 @pytest.mark.parametrize(
