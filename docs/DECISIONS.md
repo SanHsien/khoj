@@ -427,3 +427,16 @@ Markdown 語法（粗體、清單、連結、`![]()` 圖片）照常渲染；mar
 | issue #1461 Debian 13 用 pip 安裝失敗（magika 不支援 Python 3.13） | 不處理（記觸發條件） | 本 fork 的 `pyproject.toml:10` 是 `requires-python = ">=3.11, <3.13"`，`pyproject.toml:47` 是 `magika ~= 0.5.1`，`uv.lock` 鎖 0.5.1；PyPI 上 magika 0.5.1 宣告 `>=3.8,<3.13`，0.6.3 起與最新 1.0.3 才是 `>=3.8`。所以 Debian 13 內建的 Python 3.13 在本 fork 一樣裝不起來，只是會在 `requires-python` 那一步就被擋下、錯誤訊息比上游清楚。要支援 3.13 必須把 magika 移到 0.6 以上，而產品碼直接用舊 API（`src/khoj/utils/helpers.py:58,138`、`src/khoj/processor/content/github/github_to_entries.py:18,160` 的 `Magika().identify_bytes(...).output.group`），屬於產品碼移植。issue 沒有附 diff，無程式可引用、無藏碼可掃。觸發條件：上游移植 magika，或維護者決定支援 Python 3.13 |
 
 水位：issue 1446 → 1461。commit `ae229ca`、PR 1460 不變。
+
+## 2026-10-28：Dependabot #105–#108（產品依賴範圍）
+
+本線 `ci.yml` 只驗維護工具，PR 的綠燈不代表產品行為沒事，所以每筆在 Python 3.11 隔離環境對產品實際用到的路徑做了新舊版對照。
+
+| PR | 結論 | 驗證 |
+| --- | --- | --- |
+| #105 `google-auth` `<2.62.0` → `<2.63.0` | **合併**（`001dcc2a`） | `service_account.Credentials.from_service_account_info`＋signer（`src/khoj/utils/helpers.py:1102`）在 2.59.1 與 2.62.0 都可用；`id_token.verify_oauth2_token`（`src/khoj/routers/auth.py:200,283`）簽章兩版相同 |
+| #107 `e2b-code-interpreter` `<2.11` → `<2.12` | **合併**（`b0b2a4fc`） | `execute_e2b`（`src/khoj/processor/tools/run_code.py:232`）用到的 `AsyncSandbox.create`、`run_code`、`files.list/read/write` 簽章在 2.10.5 與 2.11.5 相同 |
+| #108 `websockets` `<17` → `<18` | **合併**（`cd71c45a`） | 產品不直接 import；uvicorn 0.41.0＋FastAPI WebSocket 收發在 16.1.1 與 17.3 都正常 |
+| #106 `pymupdf` `== 1.28.2` → `== 2.0` | **延後、關閉 PR** | `PyMuPDFLoader`（`src/khoj/processor/content/pdf/pdf_to_entries.py:108`）對同一份兩頁 PDF（含繁中）新舊版輸出相同；新增的 `pymupdf-layout`、`pymupdf4llm` 2.0 都是空殼套件，其他新相依原本就在 `uv.lock`，授權仍是 AGPL-3.0／Artifex 商業雙授權。**不升的原因是平台缺口**：2.0 只有 macOS arm64、manylinux x86_64／aarch64、win_amd64 的 wheel，少了 1.28.2 有的 macOS x86_64、musllinux x86_64、win32、win_arm64。`pyproject.toml` 是精確釘版，這些平台 `pip install khoj` 會被迫從 89 MB 原始碼編譯，而 `documentation/docs/get-started/setup.mdx:128` 把 Intel macOS 列為支援平台。Windows x64 與 Docker（`ubuntu:noble`）不受影響。記在 `.github/dependency-deferrals.json`（`deferredLatest` 2.0）；新鮮度檢查只讀 `requirements-dev.txt`，那筆不會自動過期，實際的重新追問是 Dependabot 對 2.0 之後的版本開新 PR。觸發：pymupdf 補齊 Intel macOS wheel，或 khoj 放棄 Intel macOS |
+
+`uv.lock` 以 uv 0.13.6 `uv lock`（不升版）同步三個範圍（`4a91fac7`），鎖定版本不變（google-auth 2.59.1、e2b-code-interpreter 1.0.5、websockets 16.1.1），`revision` 維持 5。

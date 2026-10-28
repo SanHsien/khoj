@@ -1,4 +1,9 @@
 {
   "$comment": "每月依賴檢查用：已經看過、但這次不升的決定。deferredLatest 記下當時審視的版本，PyPI 一超過它就自動恢復提醒。",
-  "deferrals": {}
+  "deferrals": {
+    "pymupdf": {
+      "deferredLatest": "2.0",
+      "reason": "2026-10-28 已看過 Dependabot #106（pyproject.toml 的 pymupdf == 1.28.2 → == 2.0）：PDF 解析（PyMuPDFLoader）新舊版輸出相同、授權不變，但 2.0 只有 macOS arm64、manylinux x86_64／aarch64、win_amd64 四個 wheel，少了 1.28.2 有的 macOS x86_64、musllinux、win32、win_arm64；精確釘版下這些平台的 pip 安裝會被迫從原始碼編譯，而 documentation/docs/get-started/setup.mdx 把 Intel macOS 列為支援平台。注意：本檢查只讀 requirements-dev.txt，這筆不會由檢查器自動過期；實際的重新追問是 Dependabot 對 2.0 之後的版本開新 PR。觸發：pymupdf 補齊 Intel macOS wheel，或 khoj 放棄 Intel macOS。"
+    }
+  }
 }
