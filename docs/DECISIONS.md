@@ -417,3 +417,13 @@ Markdown 語法（粗體、清單、連結、`![]()` 圖片）照常渲染；mar
 **驗證**：文件站 `yarn.lock` 以腳本檢查依賴閉包（2578 條依賴參照、0 條缺漏）；`update-notifier` 7.3.1 實際下載並比對
 `@docusaurus/core` 3.10.2 的 `bin/beforeCli.mjs` 用到的成員（`config`、`check()`、`update`），都存在；`uv lock --check` 通過；
 `CrossEncoder`／`predict` 的 `model_name_or_path`、`activation_fn` 在 `sentence-transformers` 6.2.0 的 wheel 內確認存在。
+
+## 2026-10-28：上游審查（commit 無新增；PR 無新增；issue 1446 → 1461）
+
+上游 `master` 仍在 `ae229ca`，PR 在 #1460 之後沒有新項目（`--state all`）。唯一的新項目是 issue #1461。
+
+| 項目 | 結論 | 本 fork 驗證／理由 |
+| --- | --- | --- |
+| issue #1461 Debian 13 用 pip 安裝失敗（magika 不支援 Python 3.13） | 不處理（記觸發條件） | 本 fork 的 `pyproject.toml:10` 是 `requires-python = ">=3.11, <3.13"`，`pyproject.toml:47` 是 `magika ~= 0.5.1`，`uv.lock` 鎖 0.5.1；PyPI 上 magika 0.5.1 宣告 `>=3.8,<3.13`，0.6.3 起與最新 1.0.3 才是 `>=3.8`。所以 Debian 13 內建的 Python 3.13 在本 fork 一樣裝不起來，只是會在 `requires-python` 那一步就被擋下、錯誤訊息比上游清楚。要支援 3.13 必須把 magika 移到 0.6 以上，而產品碼直接用舊 API（`src/khoj/utils/helpers.py:58,138`、`src/khoj/processor/content/github/github_to_entries.py:18,160` 的 `Magika().identify_bytes(...).output.group`），屬於產品碼移植。issue 沒有附 diff，無程式可引用、無藏碼可掃。觸發條件：上游移植 magika，或維護者決定支援 Python 3.13 |
+
+水位：issue 1446 → 1461。commit `ae229ca`、PR 1460 不變。
