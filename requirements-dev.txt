@@ -1,4 +1,4 @@
 pytest>=9
-ruff>=0.16
+ruff>=0.16  # freshness-hold: lint-only (E9,F on tools/); 0.16.0 and 0.17.3 both pass the CI lint (2026-10-28), and CI always installs the newest ruff, so a new release is exercised without raising the floor
 jinja2>=3  # email template rendering test
-markdown-it-py>=3  # email template rendering test
+markdown-it-py>=3  # freshness-hold: email template rendering test; matches the product pin markdown-it-py ~= 3.0.0 in pyproject.toml, and tools/tests/test_email_rendering.py passes on 3.0.0 and 4.2.0 (2026-10-28). Raise with the product pin, not before
