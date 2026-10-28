@@ -440,3 +440,27 @@ Markdown 語法（粗體、清單、連結、`![]()` 圖片）照常渲染；mar
 | #106 `pymupdf` `== 1.28.2` → `== 2.0` | **延後、關閉 PR** | `PyMuPDFLoader`（`src/khoj/processor/content/pdf/pdf_to_entries.py:108`）對同一份兩頁 PDF（含繁中）新舊版輸出相同；新增的 `pymupdf-layout`、`pymupdf4llm` 2.0 都是空殼套件，其他新相依原本就在 `uv.lock`，授權仍是 AGPL-3.0／Artifex 商業雙授權。**不升的原因是平台缺口**：2.0 只有 macOS arm64、manylinux x86_64／aarch64、win_amd64 的 wheel，少了 1.28.2 有的 macOS x86_64、musllinux x86_64、win32、win_arm64。`pyproject.toml` 是精確釘版，這些平台 `pip install khoj` 會被迫從 89 MB 原始碼編譯，而 `documentation/docs/get-started/setup.mdx:128` 把 Intel macOS 列為支援平台。Windows x64 與 Docker（`ubuntu:noble`）不受影響。記在 `.github/dependency-deferrals.json`（`deferredLatest` 2.0）；新鮮度檢查只讀 `requirements-dev.txt`，那筆不會自動過期，實際的重新追問是 Dependabot 對 2.0 之後的版本開新 PR。觸發：pymupdf 補齊 Intel macOS wheel，或 khoj 放棄 Intel macOS |
 
 `uv.lock` 以 uv 0.13.6 `uv lock`（不升版）同步三個範圍（`4a91fac7`），鎖定版本不變（google-auth 2.59.1、e2b-code-interpreter 1.0.5、websockets 16.1.1），`revision` 維持 5。
+
+
+## 2026-10-28：`deepmerge` 警報 #367 延後（無修補版，維持 open）
+
+Dependabot Alert #367（GHSA-gcqx-w48m-w2h4／CVE-2026-93753，low）指向 `documentation/yarn.lock` 的 `deepmerge 4.3.1`
+（`mergeObject()` 原型污染；vulnerable range `>= 4.2.0, <= 4.3.1`，`first_patched_version` 為空）。
+
+**依賴圖**：唯一來路是 `@docusaurus/preset-classic` → `@docusaurus/plugin-svgr 3.10.2` → `@svgr/webpack ^8.1.0`
+→ `@svgr/plugin-svgo 8.1.0` → `deepmerge ^4.3.1`。2026-10-28 實查 npm：`deepmerge` 最新版（`latest`）就是 4.3.1，
+`@svgr/plugin-svgo`／`@svgr/webpack` 最新版仍是 8.1.0（`next` 是 6.0.0 alpha，更舊），所以沒有可升的修補版，也沒有可以
+換掉的上游版本；用 `resolutions` 強制別的版本號只會掩蓋問題（沿用 2026-10-26 `http-cache-semantics` 的判準）。
+`deepmerge` 在 `@svgr/plugin-svgo` 只用來合併建置時的 SVGO 設定，輸入是文件站自己的設定檔，不含外部使用者資料。
+
+**決定**：不改任何程式或鎖檔，警報維持 open、不 dismiss。範圍是文件站建置期 dependency（不是 Khoj 伺服器 runtime），
+嚴重度 low。若維護者之後決定 dismiss，建議理由為 `tolerable_risk`。
+
+**重新評估觸發條件**（任一成立就重查）：
+
+1. npm 出現 `deepmerge` > 4.3.1，或該 GHSA 的 `first_patched_version` 有值；
+2. `@svgr/plugin-svgo` 發布不再依賴 `deepmerge` 的版本，或 Docusaurus 移除 `plugin-svgr`（可用 `grep -c deepmerge documentation/yarn.lock` 確認為 0）；
+3. 文件站建置開始把外部／使用者提供的物件餵給 SVGO 設定合併。
+
+**狀態更正**：先前記為延後的 #245（`http-cache-semantics`）已在 2026-10-26 15:35Z 轉為 fixed（`update-notifier` resolution，見上方條目），
+目前 khoj 的 open Dependabot 警報只剩 #367。
