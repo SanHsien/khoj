@@ -19,6 +19,7 @@ FORK_OWN = {
     "codeql.yml",
     "dependency-freshness.yml",
     "docker-build-check.yml",
+    "docker-compose-smoke.yml",
     "upstream-check.yml",
 }
 GATE = re.compile(r"^if:\s*.*github\.repository == 'khoj-ai/khoj'")

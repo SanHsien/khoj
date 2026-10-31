@@ -5,7 +5,7 @@
 
 ## 現況
 `khoj-ai/khoj` 的 Windows-first 維護線：產品程式跟隨上游 `ae229ca`，加上 [`FORK.md`](FORK.md) 列的 overlay（Compose 硬化、日誌注入防護、寄信 autoescape 等），本線不發佈套件或映像。2026-10-29 查 `main`：open PR 0、Dependabot open alert 1 筆（low，`deepmerge`，文件站建置期依賴，無修補版）、code scanning 0；CI／CodeQL／Dependency freshness／Upstream check 最近一次 success；issues 已停用，open issue 數「未查到」（查法：`gh api repos/SanHsien/khoj/dependabot/alerts?state=open`、`gh run list -R SanHsien/khoj -b main`）。
-卡點：`ci.yml` 只測維護工具，`docker-build-check.yml` 只在映像內 import 套件；本線從沒有自動化地把 Khoj 伺服器跑起來過（[`REVIEW.md`](REVIEW.md)「尚未宣稱範圍」），所以五批上游修正卡在「adoption pending」。
+卡點：`ci.yml` 只測維護工具，`docker-build-check.yml` 只在映像內 import 套件；`docker-compose-smoke.yml`（手動或 `verify/*` 觸發，驗伺服器啟動與管理員登入）已新增、尚未實跑；沒有 run 連結前，五批上游修正仍卡在「adoption pending」。
 
 ## 近期：可以直接動手
 | 項目 | 為什麼 | 驗收方式 | 建議執行者 | 證據 |

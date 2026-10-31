@@ -24,6 +24,7 @@
 | `tools/dev_check.ps1` | Windows 本機一鍵 gate（維護工具，不安裝產品依賴） |
 | `.github/workflows/ci.yml` | Ubuntu 3.11–3.14 + Windows Python 3.14：compile / ruff / 維護測試 / 連結檢查 |
 | `.github/workflows/docker-build-check.yml` | 手動或推到 `verify/*` 分支時建置兩個 Dockerfile 並在映像內匯入檢查 |
+| `.github/workflows/docker-compose-smoke.yml` | 手動或推到 `verify/*` 分支時，以 Compose 啟動 Postgres＋Khoj 伺服器，驗 `/api/health` 與管理員登入（已新增、尚未實跑） |
 | `.github/workflows/upstream-check.yml` | 每週對 `upstream/master` 做未審查 commit 檢查 |
 | 發佈與產品 CI workflow 閘門 | PyPI、GHCR、GitHub Pages、桌面、Obsidian release、eval、上游 `test.yml`／pre-commit／Emacs 只允許 `khoj-ai/khoj` |
 | `docker-compose.yml` | fork overlay：埠綁 `127.0.0.1`、關匿名模式與遙測、computer 走 `--profile operator` |

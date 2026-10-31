@@ -1,0 +1,135 @@
+name: Docker Compose smoke
+
+# Builds Khoj server image, launches Postgres and server containers with Compose,
+# and verifies health check and admin login.
+# Run it after dependency upgrades or to verify server changes before adoption:
+# push the change to a `verify/*` branch (or dispatch it manually) and read the result.
+on:
+  workflow_dispatch:
+  push:
+    branches: ["verify/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: compose smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      COMPOSE_FILE: docker-compose.yml:compose.smoke.yml
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build server image from source
+        run: docker build --tag ghcr.io/khoj-ai/khoj:latest .
+
+      - name: Allow plain-HTTP admin cookies for the smoke run
+        run: |
+          cat > compose.smoke.yml <<'EOF'
+          services:
+            server:
+              environment:
+                - KHOJ_NO_HTTPS=True
+                - KHOJ_DOMAIN=127.0.0.1
+          EOF
+
+      - name: Start Postgres and Khoj server with Compose
+        run: docker compose up -d database server
+
+      - name: Wait for server and check /api/health
+        run: |
+          echo "Waiting for Khoj server on 127.0.0.1:42110 /api/health..."
+          for i in $(seq 1 60); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:42110/api/health || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "Server /api/health returned 200 OK after ${i} attempts."
+              break
+            fi
+            echo "Attempt $i: status is '$STATUS', sleeping 5s..."
+            sleep 5
+            if [ "$i" -eq 60 ]; then
+              echo "Error: Server /api/health did not return 200 within timeout."
+              exit 1
+            fi
+          done
+
+      - name: Verify admin login
+        run: |
+          python3 - << 'EOF'
+          import http.cookiejar
+          import re
+          import sys
+          import urllib.parse
+          import urllib.request
+
+          base_url = "http://127.0.0.1:42110"
+          login_url = f"{base_url}/server/admin/login/?next=/server/admin/"
+          post_url = f"{base_url}/server/admin/login/"
+
+          cj = http.cookiejar.CookieJar()
+          opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+
+          # 1. Fetch login page to obtain csrftoken
+          req = urllib.request.Request(login_url)
+          with opener.open(req) as resp:
+              html = resp.read().decode("utf-8")
+
+          match = re.search(r'name=["\']csrfmiddlewaretoken["\']\s+value=["\']([^"\']+)["\']', html)
+          if not match:
+              match = re.search(r'value=["\']([^"\']+)["\']\s+name=["\']csrfmiddlewaretoken["\']', html)
+          if not match:
+              print("Error: Could not find csrfmiddlewaretoken in login page HTML", file=sys.stderr)
+              print(html[:1000], file=sys.stderr)
+              sys.exit(1)
+
+          csrf_token = match.group(1)
+
+          # 2. Post login credentials from docker-compose.yml
+          data = urllib.parse.urlencode({
+              "csrfmiddlewaretoken": csrf_token,
+              "username": "username@example.com",
+              "password": "password",
+              "next": "/server/admin/",
+          }).encode("utf-8")
+
+          req = urllib.request.Request(
+              post_url,
+              data=data,
+              headers={
+                  "Referer": login_url,
+              },
+          )
+
+          try:
+              with opener.open(req) as resp:
+                  code = resp.status
+                  content = resp.read().decode("utf-8")
+                  print(f"Admin login response HTTP code: {code}")
+                  path = urllib.parse.urlparse(resp.geturl()).path
+                  if code != 200 or path.rstrip("/") != "/server/admin" or not any(c.name == "sessionid" for c in cj):
+                      print(f"Error: login not established (code={code}, path={path})", file=sys.stderr)
+                      sys.exit(1)
+                  print("Admin login successfully verified with HTTP 200!")
+          except Exception as e:
+              print(f"Error during admin login: {e}", file=sys.stderr)
+              sys.exit(1)
+          EOF
+
+      - name: Dump logs on failure
+        if: failure()
+        run: |
+          echo "=== Docker Compose Status ==="
+          docker compose ps
+          echo "=== Server Container Logs ==="
+          docker compose logs server
+          echo "=== Database Container Logs ==="
+          docker compose logs database
+
+      - name: Stop Compose services
+        if: always()
+        run: docker compose down -v

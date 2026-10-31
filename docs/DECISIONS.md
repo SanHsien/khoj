@@ -464,3 +464,18 @@ Dependabot Alert #367（GHSA-gcqx-w48m-w2h4／CVE-2026-93753，low）指向 `doc
 
 **狀態更正**：先前記為延後的 #245（`http-cache-semantics`）已在 2026-10-26 15:35Z 轉為 fixed（`update-notifier` resolution，見上方條目），
 目前 khoj 的 open Dependabot 警報只剩 #367。
+
+
+## 2026-10-31：新增 Docker Compose smoke workflow
+
+**決定**：新增 `.github/workflows/docker-compose-smoke.yml`，沿用 `docker-build-check.yml` 的手動 dispatch 或推送到 `verify/*` 分支的觸發方式。
+
+**理由**：先前產品依賴升級、Python 3.10 → 3.11、`ubuntu:noble` 基底與 fork overlay 只有映像內 import 的靜態檢查證據，未曾自動化啟動完整 Khoj 伺服器與 Postgres 資料庫，導致多批上游 PR 修正卡在 adoption pending。新增 Compose smoke 讓 CI 能真實啟動 Postgres 與 Khoj 伺服器並自動驗證服務健康與管理員登入。
+
+**驗證機制**：
+1. 於 Ubuntu runner 以本地 Dockerfile 建置 `ghcr.io/khoj-ai/khoj:latest` 映像。
+2. 執行 `docker compose up -d database server` 啟動 Postgres（pgvector）與 Khoj 伺服器容器。
+3. 輪詢 `GET http://127.0.0.1:42110/api/health` 直至回傳 HTTP 200。
+4. 以 Compose 預設管理員帳號（`username@example.com` / `password`）提交登入表單至 `/server/admin/login/`，驗證跟隨重定向後停在 `/server/admin/`、HTTP 200 且 cookie jar 有 `sessionid`（Compose 另疊 `compose.smoke.yml` 設 `KHOJ_NO_HTTPS=True`、`KHOJ_DOMAIN=127.0.0.1`，否則 CSRF cookie 帶 `Secure` 不會經 HTTP 送出）。
+5. 任一步驟失敗即 exit 1 並印出容器日誌。
+6. 本機 gate `tools\dev_check.ps1` 綠燈（更新 `tools/tests/test_workflow_gates.py` 納入 `FORK_OWN`）；實測 run 連結待維護者審查後推至 `verify/*` 或手動 dispatch 執行並補入。
