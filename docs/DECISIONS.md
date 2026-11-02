@@ -478,4 +478,20 @@ Dependabot Alert #367（GHSA-gcqx-w48m-w2h4／CVE-2026-93753，low）指向 `doc
 3. 輪詢 `GET http://127.0.0.1:42110/api/health` 直至回傳 HTTP 200。
 4. 以 Compose 預設管理員帳號（`username@example.com` / `password`）提交登入表單至 `/server/admin/login/`，驗證跟隨重定向後停在 `/server/admin/`、HTTP 200 且 cookie jar 有 `sessionid`（Compose 另疊 `compose.smoke.yml` 設 `KHOJ_NO_HTTPS=True`、`KHOJ_DOMAIN=127.0.0.1`，否則 CSRF cookie 帶 `Secure` 不會經 HTTP 送出）。
 5. 任一步驟失敗即 exit 1 並印出容器日誌。
-6. 本機 gate `tools\dev_check.ps1` 綠燈（更新 `tools/tests/test_workflow_gates.py` 納入 `FORK_OWN`）；實測 run 連結待維護者審查後推至 `verify/*` 或手動 dispatch 執行並補入。
+6. 本機 gate `tools\dev_check.ps1` 綠燈（更新 `tools/tests/test_workflow_gates.py` 納入 `FORK_OWN`）；GitHub 實測已成功：[run 41187490343](https://github.com/SanHsien/khoj/actions/runs/41187490343)（2026-10-31，HEAD `4d9cf94495f8246656f5ad733d759a2c76f8c181`，2026-11-02 補登）。日誌確認 `/api/health` 第 5 次取得 200、管理員登入回 200 並通過 session 與導向檢查，job conclusion 為 `success`。此證據涵蓋該 HEAD 的通用啟動／登入，不代表 adoption pending 修正的個別路徑已驗證，也不代表 Windows 本機已啟動產品。
+
+
+## 2026-11-02：Dependency freshness 紅燈來源與維持宣告
+
+**證據**：[run 41295250267](https://github.com/SanHsien/khoj/actions/runs/41295250267)（2026-11-01，HEAD `4d9cf94495f8246656f5ad733d759a2c76f8c181`）的宣告檢查沒有 `REVIEW UPDATE` 或 `CHECK FAILED`，`CHECKER_NEEDS_ATTENTION: false`。當時仍開啟的 Dependabot PR 是 #111（desktop `follow-redirects`）、#112（`joserfc`）、#113（documentation `joi`）、#114（`pyasn1`）；因此 `Include open Dependabot pull requests` 將 `needs_attention` 設為 true，最後 `Mark maintenance as required` exit 1。2026-11-02 重查另有 #115（開發依賴 `stripe`）、#116（production-minor-and-patch 群組），共 6 筆 open PR。
+
+| 套件 | 宣告 | run 與本次 PyPI latest | 判定／處置 |
+| --- | --- | --- | --- |
+| `pytest` | `>=9` | `9.2.0` | OK；同一主版本符合既有下限精度，不調高相容性下限 |
+| `ruff` | `>=0.16` | `0.17.3` | HELD；沿用行末理由：僅檢查 E9、F，CI 安裝最新版本，0.16.0 與 0.17.3 已有 lint 驗證 |
+| `jinja2` | `>=3` | `3.1.6` | OK；同一主版本符合既有下限精度 |
+| `markdown-it-py` | `>=3` | `4.2.0` | HELD；沿用行末理由：對齊產品 `~=3.0.0`，3.0.0／4.2.0 已有寄信渲染驗證，隨產品 pin 再調整 |
+
+**決定與理由**：不改 `requirements-dev.txt`、不新增 deferral、不改 workflow，也不關閉或合併 PR。宣告檢查本身正常，不能靠抬高下限、無依據的延後或移除 PR 提醒掩蓋紅燈。上述 PR 涉及產品／客戶端依賴，各自仍需完整 diff 與使用路徑驗證；本次只授權宣告檢查與 smoke 證據補登，未進行這些產品升級。未審 PR 的後續工作統一列在 `ROADMAP.md`。
+
+**本機驗證**：`python tools/check_dependency_freshness.py --strict` exit 0，四列依序為 OK／HELD／OK／HELD；沒有程式缺陷修正，因此無新增回歸測試或先紅後綠紀錄。遠端舊 run 仍為 failure，本機 exit 0 不等同整個 workflow 已轉綠。
