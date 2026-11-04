@@ -495,3 +495,22 @@ Dependabot Alert #367（GHSA-gcqx-w48m-w2h4／CVE-2026-93753，low）指向 `doc
 **決定與理由**：不改 `requirements-dev.txt`、不新增 deferral、不改 workflow，也不關閉或合併 PR。宣告檢查本身正常，不能靠抬高下限、無依據的延後或移除 PR 提醒掩蓋紅燈。上述 PR 涉及產品／客戶端依賴，各自仍需完整 diff 與使用路徑驗證；本次只授權宣告檢查與 smoke 證據補登，未進行這些產品升級。未審 PR 的後續工作統一列在 `ROADMAP.md`。
 
 **本機驗證**：`python tools/check_dependency_freshness.py --strict` exit 0，四列依序為 OK／HELD／OK／HELD；沒有程式缺陷修正，因此無新增回歸測試或先紅後綠紀錄。遠端舊 run 仍為 failure，本機 exit 0 不等同整個 workflow 已轉綠。
+
+## 2026-11-04：Dependabot 告警 minimatch 與 deepmerge 的處置
+
+**證據**：2026-11-04 實查 open 告警 4 筆。
+
+| 告警 | 套件／位置 | 關係 | 修補版 | 處置 |
+| --- | --- | --- | --- | --- |
+| #374 | `minimatch` 9.0.9，`src/interface/obsidian/yarn.lock` | 間接（`@typescript-eslint/typescript-estree`） | 11.0.1 | 已修：`package.json` 加 resolution `minimatch ^11.0.1`，並把 `brace-expansion` resolution 由 `^2.1.2` 改 `^5.0.12`（minimatch 11 需要 5.x 的具名 `expand`，2.x 會讓含大括號的 pattern 當掉）；lock 解析為 minimatch 11.0.4／brace-expansion 5.0.12。驗證：`npm run build` 通過，且 `minimatch("a.ts","*.{ts,js}")` 為 true（大括號 pattern 實測） |
+| #373 | `minimatch` 3.1.5，`src/interface/desktop/yarn.lock` | 間接（`@todesktop/runtime`（desktop 的 `dependencies`）→ `del@6` → `rimraf@3` → `glob@7`，要求 `^3.1.1`） | 11.0.1 | 延後 |
+| #370 | `minimatch` 3.1.5，`documentation/yarn.lock` | 間接（`serve-handler`，精確釘 `3.1.5`） | 11.0.1 | 延後 |
+| #367 | `deepmerge` 4.3.1，`documentation/yarn.lock` | 間接 | 無（`>= 4.2.0, <= 4.3.1` 全受影響） | 延後 |
+
+**決定與理由**：
+
+- #373、#370：`glob@7` 要求 `minimatch ^3`，`serve-handler` 精確釘 `3.1.5`；minimatch 3 與 11 跨了 8 個主版本（含 CommonJS 匯出形式與 Node 版本下限變動），強制 resolution 沒有上游測試背書，且這兩條鏈在本 repo 沒有可驗證 11 相容的測試。#370 只在文件預覽工具鏈；#373 隨 desktop 的自動更新 runtime 出貨，但路徑是 runtime 內部用 `del` 清檔。漏洞是 glob pattern 放大造成的 DoS，需要攻擊者能控制 pattern；依依賴鏈判斷這些 pattern 由程式碼自己產生、不接外部輸入（未逐行審 `@todesktop/runtime`）。
+- #367：上游尚無修補版，無法升級。
+- 不用 `dismiss` 關閉告警，保持可見，等上游動作。
+
+**觸發條件**：`@todesktop/runtime` 不再依賴 `del@6`，或 `del` 升到 8 以上（`del@7` 仍依賴 `rimraf@3`；`@todesktop/runtime` 2.1.4 仍要求 `del ^6.1.1`）（#373）；`serve-handler` 釋出不釘 `minimatch@3.1.5` 的版本（#370）；`deepmerge` 釋出 4.3.2 以上或有修補版（#367）。Dependabot 開新 PR 時依 AGENTS.md 流程審查。
