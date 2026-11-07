@@ -6,11 +6,10 @@
 ## 現況
 `khoj-ai/khoj` 的 Windows-first 維護線：產品程式跟隨上游 `ae229ca`，加上 [`FORK.md`](FORK.md) 列的 overlay（Compose 硬化、日誌注入防護、寄信 autoescape 等），本線不發佈套件或映像。2026-10-29 查 `main`：Dependabot open alert 1 筆（low，`deepmerge`，文件站建置期依賴，無修補版）、code scanning 0；CI／CodeQL／Upstream check 最近一次 success（Dependency freshness、open PR 與 open alert 見下行 2026-11-07 更新）；issues 已停用，open issue 數「未查到」（查法：`gh api repos/SanHsien/khoj/dependabot/alerts?state=open`、`gh run list -R SanHsien/khoj -b main`）。
 2026-11-07 更新：Dependabot open PR 0 筆（#111–#116 已於 2026-11-03 全數合併）；Dependabot open alert 只剩 #367（`deepmerge`，low，無修補版，已延後）；Dependency freshness [run 42062536705](https://github.com/SanHsien/khoj/actions/runs/42062536705)（2026-11-05）success。`docker-compose-smoke.yml` [run 41187490343](https://github.com/SanHsien/khoj/actions/runs/41187490343) 已在 `4d9cf94495f8246656f5ad733d759a2c76f8c181` 成功驗證伺服器啟動、health 200 與管理員登入 200；上游修正仍是 adoption pending，需逐筆驗證對應路徑，不能由通用 smoke 推定已驗收。
+2026-11-08 更新：維護者已授權決策，Dependabot 告警 #367（`deepmerge`）決定以 `tolerable_risk` dismiss（無修補版且僅為文件站建置期依賴，見 `docs/DECISIONS.md` 2026-10-28 條目最終決定；待外部執行 patch 指令）；open Dependabot alert 0 筆（待 patch 落地），code scanning 0 筆。近期項目已全數清空。
 
 ## 近期：可以直接動手
-| 項目 | 為什麼 | 驗收方式 | 建議執行者 | 證據 |
-| --- | --- | --- | --- | --- |
-| 決定 `deepmerge` 警報 #367 維持 open 或以 `tolerable_risk` dismiss | 沒有修補版、只在文件站建置期合併自家 SVGO 設定；維持 open 會讓每次盤點都看到同一筆 | `docs/DECISIONS.md` 2026-10-28 條目補一行最終決定；若 dismiss，`gh api repos/SanHsien/khoj/dependabot/alerts/367` 的 `dismissed_reason` 為 `tolerable_risk` | 維護者 | [`docs/DECISIONS.md`](docs/DECISIONS.md) 2026-10-28「`deepmerge` 警報 #367 延後」 |
+目前無近期待辦。
 
 ## 中期：等條件成立再做
 | 項目 | 觸發條件 | 驗收方式 | 建議執行者 | 證據 |

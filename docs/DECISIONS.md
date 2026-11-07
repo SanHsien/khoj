@@ -455,6 +455,7 @@ Dependabot Alert #367（GHSA-gcqx-w48m-w2h4／CVE-2026-93753，low）指向 `doc
 
 **決定**：不改任何程式或鎖檔，警報維持 open、不 dismiss。範圍是文件站建置期 dependency（不是 Khoj 伺服器 runtime），
 嚴重度 low。若維護者之後決定 dismiss，建議理由為 `tolerable_risk`。
+**最終決定（2026-11-08）**：維護者已授權代為決定。因無修補版、無可執行之修復動作，且僅為文件站建置期依賴、不接觸外部資料，依艦隊維護準則以 `tolerable_risk` dismiss 本告警，避免盤點雜訊。重新評估觸發條件見下方。
 
 **重新評估觸發條件**（任一成立就重查）：
 
