@@ -64,7 +64,7 @@ dependencies = [
     "pymupdf == 1.28.2",
     "django==5.2.18",
     "django-unfold == 0.42.0",
-    "authlib == 1.9.1",
+    "authlib == 1.9.5",
     "itsdangerous == 2.2.0",
     "httpx == 0.28.1",
     "pgvector == 0.2.5",
