@@ -66,6 +66,26 @@ khoj -vv
 
 Windows 上 pgvector 仍屬實驗性，上游建議 Docker。細節與常見錯誤見 <https://docs.khoj.dev/contributing/development> 的 Windows 段。
 
+### 用內嵌 Postgres 在 Windows 跑伺服器（2026-11-08 實測，Python 3.11）
+
+不裝 Docker、不裝 Postgres，用 `pgserver` 內嵌資料庫。環境依鎖檔重建，不需要任何手動修補：
+
+```powershell
+$env:UV_PROJECT_ENVIRONMENT = "$env:TEMP\khoj-venv"   # 放在 repo 外
+uv sync --frozen --python 3.11 --extra dev
+$env:USE_EMBEDDED_DB = "true"
+$env:PGSERVER_DATA_DIR = "$env:TEMP\khoj-pgdata"       # 不設會放進 src\khoj\pgserver_data
+$env:KHOJ_DOMAIN = "localhost"; $env:KHOJ_NO_HTTPS = "true"
+$env:KHOJ_ADMIN_EMAIL = "admin@example.com"; $env:KHOJ_ADMIN_PASSWORD = "<自訂>"
+$env:OPENAI_BASE_URL = "http://127.0.0.1:11434/v1"      # 本機 Ollama
+$env:KHOJ_DEFAULT_CHAT_MODEL = "<Ollama 模型名>"
+& "$env:TEMP\khoj-venv\Scripts\khoj.exe" --anonymous-mode --non-interactive --port <沒人用的 port> -vv
+```
+
+產品測試用同一組環境變數：`& "$env:TEMP\khoj-venv\Scripts\python.exe" -m pytest tests/<檔案> -o addopts=""`。研究模式要用支援工具呼叫的模型（例如 `qwen3:0.6b`）；`smollm:135m` 會回 `does not support tools`。
+
+`pgserver` 0.1.4 的 Windows wheel 沒有時區資料庫，也只聽 TCP；`settings.py` 與 `khoj.utils.embedded_db` 已處理，原因見 [`DECISIONS.md`](DECISIONS.md) 2026-11-08。
+
 Obsidian 外掛開發在 `src/interface/obsidian`：`yarn install` 後 `yarn dev`，把產出的 `main.js` 換進 Obsidian 已安裝的 Khoj 外掛目錄。
 
 ## Canonical gate

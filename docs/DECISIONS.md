@@ -212,13 +212,15 @@ Dependabot 已對上述主版加 `ignore`（`semver-major`），避免重複開 
 
 ### 採用待辦（adoption pending）
 
-| 項目 | 原因 | 觸發條件 |
-| --- | --- | --- |
-| #1424（PDF 暫存檔在 Windows 無法重開，+114/-7） | 動 PDF 索引路徑，需實跑 PDF 匯入才能驗；無產品測試 | 有產品測試環境，或上游合併 |
-| #1430（工具選擇 fallback 崩潰，+42/-4） | 動聊天路由，需 agent 設定與資料庫 | 同上 |
-| #1432（inline HTML 文字，+191/-7） | 動 HTML／網頁讀取，行為變更範圍大 | 同上 |
-| #1440／#1437（markdown 標題無文字時卡住） | 動索引切分，需以長筆記實測 | 同上 |
-| #1442／#1439（operator 拿到最近對話輪次） | 行為變更，需 operator 環境 | 同上 |
+2026-11-08 已處理完，逐筆結果與實測證據見 2026-11-08 條目。
+
+| 項目 | 結論 | 觸發條件 | 證據 |
+| --- | --- | --- | --- |
+| #1424（PDF 暫存檔在 Windows 無法重開，+114/-7） | 不採用：本 fork 已有等價修正（`87368053`，`pdf_to_entries.py` 的暫存檔 `delete=False` 並在重開前關閉） | 上游合併 #1424 且寫法與本線不同；或本線在 Windows 的 PDF 匯入再出現暫存檔無法重開 | 2026-11-08 實跑 PDF 匯入成功 |
+| #1430（工具選擇 fallback 崩潰，+42/-4） | 已採用 | 上游合併後對照 diff，內容有異就在下一輪審查處理 | 2026-11-08 條目 |
+| #1432（inline HTML 文字，+191/-7） | 已採用 | 同上 | 2026-11-08 條目 |
+| #1440／#1437（markdown 標題無文字時卡住） | 已採用 | 同上 | 2026-11-08 條目 |
+| #1442／#1439（operator 拿到最近對話輪次） | 已採用 | 同上 | 2026-11-08 條目 |
 
 ### 跟隨上游／不適用
 
@@ -300,8 +302,8 @@ Khoj 的 Django 初始化、預設 `thenlper/gte-small` embedding 查詢與文�
 | #1452 Gemini 回應沒有 `usage_metadata` 會崩潰 | **採用**（直接採用上游 PR #1452 的 diff，含其測試 `tests/test_google_usage.py`；作者見上游 PR） | 本 fork `google/utils.py` 的兩處 `response.usage_metadata.prompt_token_count … if response else 0` 在 `usage_metadata` 為 `None`（被擋的提示）時會 `AttributeError`。抽成 `get_usage_token_counts()`，用真實 `google-genai 2.32.0` 型別跑 3 個案例（上游自帶的測試，有值、缺值補 0、無 metadata／`None`）通過，`py_compile` 通過 |
 | #1456 網路搜尋的連線檢查 | **採用** | `is_internet_connected()` 的 `requests.head` 沒有逾時，又在 event loop 上同步執行；加 `timeout=5` 並改 `asyncio.to_thread`。兩處皆為單行，`py_compile` 通過；上游同 PR 的 `tests/test_web_search_connectivity.py`（+90 行，需 FastAPI 與資料庫 fixture）未帶入 |
 | #1453 速率限制原子預留 | 不採用 | 只在啟用計費的多使用者託管環境才會被並行請求繞過；本 fork 是自架，觸發條件：開啟 billing 或對外多人使用 |
-| #1454 限制研究模式並行工具呼叫 | 延後（adoption pending） | 需要資料庫與模型才能驗證；觸發條件：能實跑研究模式時 |
-| #1445 串流失敗時完整收尾 | 延後（adoption pending） | 改寫 `api_chat.py` 的事件產生器（+237 行），需實跑伺服器驗 HTTP／WebSocket；觸發條件：同上 |
+| #1454 限制研究模式並行工具呼叫 | 已於 2026-11-08 採用 | 見 2026-11-08 條目 |
+| #1445 串流失敗時完整收尾 | 已於 2026-11-08 採用（含一處 fork 調整，不是上游內容） | 見 2026-11-08 條目 |
 | #1455 自架環境顯示他人公開代理 | 延後 | 改變代理可見性，屬產品行為取捨；觸發條件：維護者要多人共用 |
 | #1457、#1458 Emacs 搜尋顯示 | 不採用 | `khoj.el` 用戶端顯示細節，本 fork 不維護 Emacs 介面 |
 | #1459 自架 SMTP 寄信 | 不採用 | 新功能（+343 行），本 fork 不寄信 |
@@ -515,3 +517,55 @@ Dependabot Alert #367（GHSA-gcqx-w48m-w2h4／CVE-2026-93753，low）指向 `doc
 - 不用 `dismiss` 關閉告警，保持可見，等上游動作。
 
 **觸發條件**：`@todesktop/runtime` 不再依賴 `del@6`，或 `del` 升到 8 以上（`del@7` 仍依賴 `rimraf@3`；`@todesktop/runtime` 2.1.4 仍要求 `del ^6.1.1`）（#373）；`serve-handler` 釋出不釘 `minimatch@3.1.5` 的版本（#370）；`deepmerge` 釋出 4.3.2 以上或有修補版（#367）。Dependabot 開新 PR 時依 AGENTS.md 流程審查。
+
+## 2026-11-08：採用 adoption pending 上游 PR，並在 Windows 實跑伺服器驗證
+
+`ROADMAP.md` 中期的 adoption pending 列涵蓋 7 筆上游 PR（#1424、#1430、#1432、#1440／#1437、#1442／#1439、#1445、#1454），上游 `master` 仍是 `ae229ca`，7 筆在 2026-11-08 查都是 OPEN、未合併，所以以 `gh pr diff` 套用，沒有上游 SHA 可 `cherry-pick -x`。結果：**採用 6 筆，#1424 不採用**。
+
+### 驗證環境
+
+- `uv sync --frozen --python 3.11 --extra dev`（Python 3.11.15，依 `uv.lock`：`pyarrow` 24.0.0、`tzdata` 2026.5、`pgserver` 0.1.4），環境放在 repo 外。
+- `USE_EMBEDDED_DB=true`、匿名模式、port 42117，資料目錄在 repo 外。本機 Ollama：`smollm:135m` 跑 PDF 匯入與聊天；研究模式要工具呼叫，`smollm:135m` 回 `400 does not support tools`，改用 `qwen3:0.6b`。
+- 重現步驟見 [`DEVELOPMENT.md`](DEVELOPMENT.md)「用內嵌 Postgres 在 Windows 跑伺服器」。
+- 每筆都在複本裡把修正還原成 `944454b3` 的版本跑一次（紅），再放回修正跑一次（綠）。真實工作樹跑相關測試共 52 passed：`test_agents.py` 只跑 fallback 那 1 個測試（全檔有 11 個，其餘未跑）；`test_plaintext_to_entries.py`、`test_read_webpage.py`、`test_markdown_to_entries.py`、`test_conversation_utils.py`、`tests/unit/test_failed_chat_stream.py`、`test_research_limits.py` 整檔都跑。
+
+### 逐筆結果
+
+| PR | 結論 | 變更 | 先紅後綠 | 伺服器實跑 |
+| --- | --- | --- | --- | --- |
+| #1424 | 不採用 | 無。本 fork 的 `pdf_to_entries.py` 已有等價修正（`87368053`：暫存檔 `delete=False`，重開前先關閉） | 不適用 | `PUT /api/content` 傳 `singlepage.pdf`、`multipage.pdf` 回 200；log 顯示 `Converted 7 PDF entries`、`Added 13 pdf entries to database`；搜尋 `rice` 取回 PDF 原文 |
+| #1430 | 採用 | `routers/helpers.py`：工具選擇失敗的 fallback 把 agent 的字串工具轉成 `ConversationCommand` | 紅：`test_tool_selection_fallback_returns_conversation_commands` 在 `assert all(isinstance(cmd, ConversationCommand) ...)` 失敗；綠：1 passed | 聊天的工具選擇路徑正常（`Selected Tools: default, image`）；fallback 分支只在模型回壞 JSON 時觸發，以單元測試為準 |
+| #1432 | 採用 | `plaintext_to_entries.py` 新增 `html_to_text`（行內標籤留在同一行）；`online_search.py` 的 `read_webpage_at_url` 改用它，並如上游刪掉 `from markdownify import markdownify` | 紅：`test_html_inline_elements_stay_in_their_line`、`test_read_webpage_at_url_keeps_sentences_and_identifiers` 失敗（2 failed, 6 passed）；綠：8 passed | 上傳 `inline.html`（`<p>Read the <b>setup</b> guide ...`），回 200，搜尋取回 `Read the setup guide before you start.` 與 `Set MAX_TOKENS in your config_file.` 兩行完整句子 |
+| #1440／#1437 | 採用 | `markdown_to_entries.py`：切分迴圈以條目內最深的標題層級為界，標題沒有文字（空 `#` 行）就不再無限迴圈；切不開時整段存成單一條目 | 紅：`test_extract_markdown_with_heading_markers_without_titles` 失敗，`AssertionError: Extracting markdown entries did not finish`（舊程式迴圈不收斂，測試用 10 秒逾時線程擋住；1 failed, 9 passed）；綠：10 passed | 上傳含 `####` 空標題與 `#<Tab>` 標題的 `empty-headings.md`，回 200，條目成功入庫並可搜尋 |
+| #1442／#1439 | 採用 | `conversation/utils.py` 的 `construct_chat_history_for_operator`：先收齊再取最近 `n` 輪，不再取最舊的 | 紅：`test_keeps_most_recent_turns` 失敗（1 failed, 11 passed）；綠：12 passed | 需要 operator 環境（Playwright 未安裝），未實跑；以單元測試為準 |
+| #1445 | 採用，含一處 fork 調整 | `api_chat.py`：回應生成與迭代包進 `try`，模型失敗時送錯誤訊息並補齊 `END_LLM_RESPONSE`、`END_RESPONSE`，`finally` 關閉 provider 與中斷監控 | 紅：16 failed, 2 passed；綠：18 passed | 非串流與串流各聊一次，都回 200；串流回應含 `start_llm_response`、`end_llm_response`、`usage`、`end_response` 各一個事件 |
+| #1454 | 採用 | `research.py`：`apick_next_tool` 依剩餘迭代數截斷並行工具呼叫，`execute_tool` 限制單次 `read_webpage` 的網頁數 | 紅：3 failed（`...[0-5]`、`...[3-2]`、`test_read_webpage_reads_at_most_max_webpages_per_call`）；綠：3 passed | 以 `qwen3:0.6b` 跑 `/research`：同一輪模型要求 2 個並行工具（`semantic_search_files`、`regex_search_files`），都在剩餘迭代數內被接受；`semantic_search_files` 搜到兩份 PDF，`regex_search_files` 因模型亂寫參數失敗（見最後的觀察），回 200 並收尾 |
+
+### #1445 的 fork 調整（不是上游內容）
+
+`api_chat.py` 的 `send_event` 裡，這一行與上游 PR 不同：
+
+```python
+elif event_type in (ChatEvent.REFERENCES, ChatEvent.METADATA, ChatEvent.END_LLM_RESPONSE, ChatEvent.END_RESPONSE) or stream:
+```
+
+- 原因：上游 `master` 的條件寫成 `event_type == REFERENCES or METADATA or stream`，因為 `ChatEvent.METADATA` 恆為真，這個條件永遠成立，非串流模式也會送出所有事件。#1445 的測試 `stream=False` 案例因此期待收到 `END_RESPONSE`。本線在 2026-09-30 已用 #1443 把條件改成 `in (REFERENCES, METADATA)`，非串流時 `END_LLM_RESPONSE`、`END_RESPONSE` 就不再送出，那些測試會失敗。所以本線把兩個終端事件加進 tuple，保持上游原有的實際行為。
+- 紅綠：拿掉兩個事件後 `tests/unit/test_failed_chat_stream.py` 8 failed, 10 passed（失敗的全是 `stream=False`）；放回後 18 passed。
+- 觸發條件：上游合併 #1445 或 #1443 時，重新對照這一行。
+
+### 不屬於這 7 筆 PR 的改動，逐項判定
+
+| 項目 | 判定 | 理由與重現 |
+| --- | --- | --- |
+| `settings.py` 從 pgserver URI 取 host 與 port | **必要**，改成程式 `khoj.utils.embedded_db.connection_from_uri` | `pgserver` 在 Windows 沒有 Unix socket，聽 `127.0.0.1` 的隨機 TCP port。`944454b3` 的設定把 `DB_HOST` 設成資料目錄、`DB_PORT` 設成空字串，伺服器啟動即失敗：`OperationalError: Unix-domain socket path ".../pgdata/.s.PGSQL.5432" is too long (maximum 107 bytes)`。Linux／macOS 的 URI 沒有 host 與 port，行為不變。`tools/tests/test_embedded_db.py` 釘住兩種 URI，並用假的 Django、pgserver 執行 `settings.py`，確認 `USE_EMBEDDED_DB` 時會先補時區資料再啟動 pgserver，且 Django 拿到 `connection_from_uri` 的 host 與 port；還原成 `944454b3` 的 `settings.py` 時該測試轉紅 |
+| 把 tzdata 複製進 `.venv` 的 pgserver | **必要**，改成啟動時自動做：`embedded_db.ensure_timezone_data` | `pgserver` 0.1.4 的 Windows wheel 沒有 `share/postgresql/timezone`，Django 每次連線的 `SET TIME ZONE 'UTC'` 失敗：`DataError: invalid value for parameter "TimeZone": "UTC"`。專案已依賴的 `tzdata` 套件有同樣編譯過的區域檔，缺目錄時複製過去，已有則不動。重現：刪掉該目錄再啟動，伺服器自動補齊並起得來。不再需要手動複製 |
+| venv 裝 `pyarrow` 19.0.1 | **不必要**，不採用 | 鎖檔的 24.0.0 下，伺服器啟動、PDF 匯入、聊天、研究模式都正常 |
+| `tools/pytest.ini` 加 `-p no:asyncio` | **不必要**，已還原 | 沒有這個旗標時 `pytest -c tools/pytest.ini tools/tests` 仍是 67 passed |
+
+### 發現：`uv.lock` 與 `pyproject.toml` 不同步
+
+`uv lock --check` 在 `944454b3` 就失敗：`pyproject.toml` 要求 `tzdata == 2026.6`、`stripe == 7.14.1`，鎖檔是 2026.5 與 7.14.0；`uv lock --dry-run` 還會連動 `torch`、`google-genai` 與 CUDA 套件。這次沒動鎖檔，環境用 `--frozen` 依現有鎖檔重建，所以驗證的是鎖檔版本，不是 `pyproject.toml` 的新版。已列入 `ROADMAP.md` 近期項目。
+
+### 觀察（不在變更範圍）
+
+研究模式實跑時，小模型把 `regex_search_files` 的參數寫成 `path_pattern`，log 出現 `TypeError: grep_files() got an unexpected keyword argument 'path_pattern'`。研究迴圈攔下並記錄，回應仍正常收尾；`grep_files` 這次沒有改。

@@ -9,12 +9,13 @@
 2026-11-08 更新：維護者已授權決策，Dependabot 告警 #367（`deepmerge`）決定以 `tolerable_risk` dismiss（無修補版且僅為文件站建置期依賴，見 `docs/DECISIONS.md` 2026-10-28 條目最終決定；待外部執行 patch 指令）；open Dependabot alert 0 筆（待 patch 落地），code scanning 0 筆。近期項目已全數清空。
 
 ## 近期：可以直接動手
-目前無近期待辦。
+| 項目 | 為什麼 | 驗收方式 | 建議執行者 | 證據 |
+| --- | --- | --- | --- | --- |
+| 讓 `uv.lock` 與 `pyproject.toml` 重新同步 | `uv lock --check` 在 `944454b3` 失敗：Dependabot 合併（2026-11-03）後 `pyproject.toml` 已要求 `tzdata == 2026.6`、`stripe 7.14.1`，鎖檔仍是 2026.5／7.14.0；`uv lock --dry-run` 還會連動 `torch`、`google-genai` 與 CUDA 套件。2026-11-08 的伺服器實測因此用 `uv sync --frozen`，沒測到新版 | `uv lock` 後 `uv lock --check` 通過；`uv sync --frozen --python 3.11 --extra dev` 後照 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)「用內嵌 Postgres 在 Windows 跑伺服器」啟動，PDF 匯入、聊天、研究模式各跑一次成功 | Claude Sonnet | [`docs/DECISIONS.md`](docs/DECISIONS.md) 2026-11-08 條目 |
 
 ## 中期：等條件成立再做
 | 項目 | 觸發條件 | 驗收方式 | 建議執行者 | 證據 |
 | --- | --- | --- | --- | --- |
-| 採用 adoption pending 的上游 PR：#1424（Windows PDF 暫存檔）、#1430（工具選擇 fallback）、#1432（inline HTML）、#1440／#1437（空標題卡住）、#1442／#1439（operator 對話輪次）、#1445（串流收尾）、#1454（研究模式並行工具） | 伺服器 smoke 已成功（run 41187490343），或上游 `master` 合併其中任一筆 | 每筆讀完整 diff、在 smoke 環境實跑對應路徑（PDF 匯入、聊天、研究模式），`pwsh -NoProfile -File tools\dev_check.ps1` 綠；`docs/DECISIONS.md` 逐筆記採用或不採用 | Claude Sonnet | [`docs/DECISIONS.md`](docs/DECISIONS.md) 2026-09-30「採用待辦」、2026-10-25 上游審查表 |
 | 審上游新變更 | `Upstream check` workflow 失敗（`--strict` exit 1＝有未審 commit／PR／issue；exit 2＝檢查本身沒跑成） | 照 [`docs/UPSTREAM.md`](docs/UPSTREAM.md)「審查清冊」逐筆讀 diff，`docs/DECISIONS.md` 記結論，推進 `tools/upstream_baseline.json` 的 `reviewed_through`／`reviewed_pr_through`／`reviewed_issue_through`；下一次 `Upstream check` success | Claude Sonnet | `tools/upstream_baseline.json`（審到 `ae229ca`、PR #1460、issue #1461）；`.github/workflows/upstream-check.yml` |
 | `pymupdf` 升 2.x | pymupdf 補齊 macOS x86_64 wheel，或維護者決定不再支援 Intel macOS | `pyproject.toml`、`uv.lock` 改版後 `uv lock --check` 通過；同一份含繁中的 PDF 用 `PyMuPDFLoader` 新舊版輸出相同；刪掉 `.github/dependency-deferrals.json` 的 `pymupdf` 條目 | Codex | [`docs/DECISIONS.md`](docs/DECISIONS.md) 2026-10-28 Dependabot #105–#108；`.github/dependency-deferrals.json` |
 | 支援 Python 3.13（magika 移到 ≥ 0.6） | 上游移植 magika，或維護者決定支援 Python 3.13 | `requires-python` 放寬到 `<3.14`；`src/khoj/utils/helpers.py:58,138`、`src/khoj/processor/content/github/github_to_entries.py:18,160` 改用新 API；CI 矩陣加 3.13，Docker smoke 綠 | Claude Opus | [`docs/DECISIONS.md`](docs/DECISIONS.md) 2026-10-28 上游審查（issue #1461）；`pyproject.toml:10`、`:47` |

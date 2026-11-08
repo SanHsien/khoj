@@ -17,6 +17,7 @@ from pathlib import Path
 
 from django.templatetags.static import static
 
+from khoj.utils.embedded_db import connection_from_uri, ensure_timezone_data
 from khoj.utils.helpers import is_env_var_true
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -144,6 +145,9 @@ if USE_EMBEDDED_DB:
 
         logger.info(f"Initializing embedded Postgres DB with data directory: {PGSERVER_DATA_DIR}")
 
+        # The pgserver Windows wheel ships without a timezone database, which Django's connection setup needs
+        ensure_timezone_data(Path(pgserver.__file__).parent)
+
         # Start server
         PGSERVER_INSTANCE = pgserver.get_server(PGSERVER_DATA_DIR)
 
@@ -165,9 +169,8 @@ if USE_EMBEDDED_DB:
 
         atexit.register(cleanup_pgserver)
 
-        # Update database configuration for pgserver
-        DB_HOST = PGSERVER_DATA_DIR
-        DB_PORT = ""  # pgserver uses Unix socket, so port is empty
+        # Update database configuration for pgserver: TCP host and port on Windows, Unix socket elsewhere
+        DB_HOST, DB_PORT = connection_from_uri(PGSERVER_INSTANCE.get_uri(), PGSERVER_DATA_DIR)
 
         logger.info("Embedded Postgres DB started successfully")
 
