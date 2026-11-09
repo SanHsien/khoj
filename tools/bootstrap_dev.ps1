@@ -35,6 +35,12 @@ if ($LASTEXITCODE -ne 0) {
     throw "pip install requirements-dev.txt failed with exit code $LASTEXITCODE"
 }
 
+Write-Host "==> Install pinned product SDK (contract tests)"
+& $venvPython (Join-Path $repoRoot "tools\install_contract_deps.py")
+if ($LASTEXITCODE -ne 0) {
+    throw "install_contract_deps.py failed with exit code $LASTEXITCODE"
+}
+
 Write-Host "==> Canonical Windows gate"
 & pwsh -NoProfile -File (Join-Path $repoRoot "tools\dev_check.ps1")
 if ($LASTEXITCODE -ne 0) {

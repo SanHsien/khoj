@@ -15,7 +15,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from install_contract_deps import CONTRACT_PACKAGES, contract_requirements  # noqa: E402
+from install_contract_deps import CONTRACT_PACKAGES, contract_requirements, refusal  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRE = "KHOJ_REQUIRE_GENAI_CONTRACT"
@@ -61,3 +61,36 @@ def test_every_ci_job_that_runs_the_tools_tests_installs_the_sdk_and_requires_it
         if runs_pytest in job:
             assert INSTALL in job, f"{name} does not install the pinned SDK"
             assert job.index(INSTALL) < job.index(runs_pytest), name
+
+
+GLOBAL = ("/usr", "/usr")
+VENV = ("/work/.venv", "/usr")
+
+
+def test_installer_refuses_to_mutate_a_global_python_and_points_at_bootstrap() -> None:
+    reason = refusal(*GLOBAL, {})
+    assert reason and "bootstrap_dev.ps1" in reason
+
+
+def test_installer_runs_inside_a_venv_and_on_ci() -> None:
+    assert refusal(*VENV, {}) is None
+    assert refusal(*GLOBAL, {"CI": "true"}) is None
+    assert refusal(*GLOBAL, {"GITHUB_ACTIONS": "true"}) is None
+    assert refusal(*GLOBAL, {"CI": "false"}) is not None
+
+
+def test_running_the_installer_in_a_global_python_exits_nonzero_without_pip() -> None:
+    import os
+    import subprocess
+
+    # The base interpreter of a venv is a global Python: it must be refused, not installed into.
+    base_python = getattr(sys, "_base_executable", sys.executable)
+    env = {k: v for k, v in os.environ.items() if k not in ("CI", "GITHUB_ACTIONS", "VIRTUAL_ENV")}
+    done = subprocess.run([base_python, str(ROOT / "tools" / INSTALL)], env=env, capture_output=True, text=True)
+    assert done.returncode == 2 and "bootstrap_dev.ps1" in done.stderr
+
+
+def test_bootstrap_installs_the_contract_deps_into_the_venv() -> None:
+    script = (ROOT / "tools" / "bootstrap_dev.ps1").read_text(encoding="utf-8")
+    assert script.index(INSTALL) < script.index("dev_check.ps1")
+    assert "& $venvPython" in script[script.index("Install pinned product SDK") :]

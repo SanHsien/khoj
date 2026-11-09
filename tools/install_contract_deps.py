@@ -11,6 +11,7 @@ torch and whisper).
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 import sys
@@ -53,11 +54,31 @@ def contract_requirements(pyproject_text: str) -> list[str]:
     return [found[name] for name in CONTRACT_PACKAGES]
 
 
+def refusal(prefix: str, base_prefix: str, env) -> str | None:
+    """Why installing here is refused, or None when it is allowed.
+
+    A gate must not mutate a global interpreter: outside a virtual environment this only
+    proceeds on CI, where the runner is disposable.
+    """
+    if prefix != base_prefix:
+        return None
+    if env.get("CI", "").lower() == "true" or env.get("GITHUB_ACTIONS", "").lower() == "true":
+        return None
+    return (
+        "Refusing to pip install into the global Python (not inside a virtual environment).\n"
+        "Create the maintenance venv first: pwsh -NoProfile -File tools/bootstrap_dev.ps1"
+    )
+
+
 def main(argv: list[str]) -> int:
     requirements = contract_requirements(PYPROJECT.read_text(encoding="utf-8"))
     if "--print" in argv:
         print("\n".join(requirements))
         return 0
+    reason = refusal(sys.prefix, sys.base_prefix, os.environ)
+    if reason:
+        print(reason, file=sys.stderr)
+        return 2
     command = [sys.executable, "-m", "pip", "install", "--disable-pip-version-check", "-q", *requirements]
     print("==> " + " ".join(requirements))
     return subprocess.call(command)
