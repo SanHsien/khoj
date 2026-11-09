@@ -569,3 +569,18 @@ elif event_type in (ChatEvent.REFERENCES, ChatEvent.METADATA, ChatEvent.END_LLM_
 ### 觀察（不在變更範圍）
 
 研究模式實跑時，小模型把 `regex_search_files` 的參數寫成 `path_pattern`，log 出現 `TypeError: grep_files() got an unexpected keyword argument 'path_pattern'`。研究迴圈攔下並記錄，回應仍正常收尾；`grep_files` 這次沒有改。
+
+## 2026-11-09：google-genai 契約測試改成真的會跑，並修 Google 圖片生成
+
+**起因**：2026-10-15 被放棄的 Codex 任務（已關閉的 PR #85，google-genai 升版）留下未追蹤的 `tools/tests/test_google_genai_contract.py`。它用 `pytest.importorskip("google.genai")`，而維護 gate 不裝 google-genai，所以一旦提交就永遠被略過，只是裝飾。對 `main` 的 `google-genai == 2.34.0` 實跑有 4 個失敗，分兩類。
+
+| 失敗 | 判定 | 證據 |
+| --- | --- | --- |
+| `test_sync_completion_uses_actual_sdk`×2、`test_async_stream_uses_actual_sdk`：`NameError: get_usage_token_counts` | **測試過期**，不是產品錯 | 採用上游 #1452 後產品多了 `get_usage_token_counts()`，測試用 AST 只載入名單內的函式，名單沒跟上。現在改成載入該模組所有函式，名單只留類別與常數 |
+| `test_google_image_product_paths[imagen-4.0-generate-001]`：`ValueError: This method is only supported in Gemini Enterprise Agent Platform mode, not in Gemini Developer API mode.` | **產品錯**（API 金鑰模式） | SDK 2.34.0 `models.py` 的 `_generate_images` 在 `not self._api_client.vertexai` 時直接 raise，沒有 Developer API 分支；Google 的[停用表](https://ai.google.dev/gemini-api/docs/deprecations#imagen-models)列 `imagen-3.0-generate-002` 2025-11-10、`imagen-4.0-*-001` 2026-08-17 在 Gemini API 停用，建議換 Gemini 圖片模型。產品的 `generate_image_with_google` 一律 `genai.Client(api_key=...)`，所以 API 金鑰用戶選 Imagen 必失敗；`initialization.py` 的預設圖片模型還是 `imagen-3.0-generate-002` |
+
+**產品修正（最小）**：`generate_image_with_google` 改用模型名分流：非 `imagen*` 一律走 `generate_content`（原本只認 `gemini-2.5-flash-image`、`gemini-3-pro-image-preview` 兩個寫死名稱，其餘包含停用表上現行的 `gemini-3-pro-image`、`gemini-3.1-flash-image`、`gemini-nano-banana-2.1` 都會掉進必失敗的 `generate_images`）；`imagen*` 在 `client.vertexai` 為真時照舊呼叫 `generate_images`，否則在送出任何請求前丟出 `ValueError` 並建議 `gemini-2.5-flash-image`（呼叫端已把 `ValueError` 轉成 500 回應）。`is_multimodal_model` 改為「`gemini` 開頭且名稱含 `image` 或 `nano-banana`」。預設圖片模型改 `gemini-2.5-flash-image`。用戶端建立方式不動，所以靠環境變數 `GOOGLE_GENAI_USE_VERTEXAI` 的 Vertex 用戶行為與上游相同。
+
+**契約測試**：`tools/install_contract_deps.py` 從 `pyproject.toml` 讀 `google-genai`／`google-auth`／`httpx`／`pillow` 的釘版安裝；`dev_check.ps1` 與 `ci.yml` 的 Ubuntu 矩陣在跑 pytest 前執行它，並設 `KHOJ_REQUIRE_GENAI_CONTRACT=1`（缺 SDK 失敗而非略過）；`tools/tests/test_contract_gate_wiring.py` 釘住這個接線。契約測試涵蓋對話、串流、四個 Gemini 圖片模型名、Imagen 在 API 金鑰模式（明確報錯且不送請求）與 Vertex 模式（`:predict`）。用 `ChatMessage` 的最小替身，不再為了測試安裝 langchain-core。紅綠：還原產品修正後該檔 4 failed（三個現行 Gemini 圖片模型名與 Imagen API 金鑰案例），套上後 12 passed。
+
+**未做**：Vertex 用戶若把服務帳戶設在 `ai_model_api`（以 googleapis 網址）而非環境變數，圖片路徑仍不支援，與上游一致，另列 `ROADMAP.md`。`uv.lock` 解析的是 `google-genai` 2.32.0、`pyproject.toml` 釘 2.34.0（既有的鎖檔不同步，見 2026-11-08 條目與 `ROADMAP.md`）；契約測試以 `pyproject.toml` 為準。無真實 Gemini 金鑰，沒有對線上 API 驗證。

@@ -21,7 +21,7 @@
 | `README.md` | 繁中主檔；上游英文移到 `README.en.md` |
 | `AGENTS.md` | 本 fork 的 AI 維護單一真相源 |
 | `NOTICE.md` / `FORK.md` | 來源、授權與同步說明 |
-| `tools/dev_check.ps1` | Windows 本機一鍵 gate（維護工具，不安裝產品依賴） |
+| `tools/dev_check.ps1` | Windows 本機一鍵 gate（維護工具；只依 `pyproject.toml` 釘版裝 `google-genai` 等四個套件供離線契約測試，不裝 torch／Django） |
 | `.github/workflows/ci.yml` | Ubuntu 3.11–3.14 + Windows Python 3.14：compile / ruff / 維護測試 / 連結檢查 |
 | `.github/workflows/docker-build-check.yml` | 手動或推到 `verify/*` 分支時建置兩個 Dockerfile 並在映像內匯入檢查 |
 | `.github/workflows/docker-compose-smoke.yml` | 手動或推到 `verify/*` 分支時，以 Compose 啟動 Postgres＋Khoj 伺服器，驗 `/api/health` 與管理員登入（已新增、尚未實跑） |
@@ -34,7 +34,7 @@
 產品程式（`src/khoj`、客戶端、上游 `test.yml`）以上游為準，除非 `REVIEW.md`／`docs/DECISIONS.md` 已記錄 fork overlay。目前 overlay：Compose 硬化、UI-TARS `ast.literal_eval`、operator 本機指令不走 shell flag、移除上游收費服務導流（2026-09-19）、
 日誌注入防護（`khoj.utils.security.sanitize_log_value`，另有一份刻意內嵌在 `src/telemetry/telemetry.py`，因為遙測映像只含該目錄）、
 `is_groq_api` 改比對完整主機名、寄信模板開 Jinja autoescape（自動化結果 `result` 例外，已是 HTML）、
-PDF／DOCX 暫存檔先關檔再讀（Windows）、以及 `docs/DECISIONS.md` 記錄的已採用上游 PR。同步上游時這些位置會衝突，以本線為準。
+PDF／DOCX 暫存檔先關檔再讀（Windows）、Google 圖片生成依模型名分流（非 `imagen*` 走 `generate_content`；`imagen*` 只在 Vertex 用戶端呼叫 `generate_images`，API 金鑰模式明確報錯；預設圖片模型改 `gemini-2.5-flash-image`，見 `docs/DECISIONS.md` 2026-11-09）、以及 `docs/DECISIONS.md` 記錄的已採用上游 PR。同步上游時這些位置會衝突，以本線為準。
 
 ## 分支與 remote
 

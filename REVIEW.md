@@ -13,7 +13,7 @@
 
 預設 `docker compose up` 只聽本機、要登入、不送遙測。檔裡仍有範例管理員密碼與 `KHOJ_DJANGO_SECRET_KEY=secret`；把埠改成對區網或網際網路開放前必須換掉。
 
-不把 fork 當成第二個官方產品 repo。Docker 映像、PyPI `khoj`、docs.khoj.dev 與 Obsidian 外掛仍屬上游。本線 Windows gate **不安裝** torch／Django，因此 **不能** 證明 Khoj 伺服器在這台 Windows 上已可對話。
+不把 fork 當成第二個官方產品 repo。Docker 映像、PyPI `khoj`、docs.khoj.dev 與 Obsidian 外掛仍屬上游。本線 Windows gate **不安裝** torch／Django（只裝離線契約測試用的 `google-genai` 等釘版套件），因此 **不能** 證明 Khoj 伺服器在這台 Windows 上已可對話。
 
 ## 本輪實證
 

@@ -26,6 +26,8 @@ jobs:
     env:
       PYTHONUTF8: "1"
       PYTHONIOENCODING: "utf-8"
+      # A missing google-genai fails tools/tests/test_google_genai_contract.py instead of skipping it
+      KHOJ_REQUIRE_GENAI_CONTRACT: "1"
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -39,6 +41,9 @@ jobs:
 
       - name: Install test dependencies
         run: python -m pip install -r requirements-dev.txt
+
+      - name: Install pinned product SDK (contract tests)
+        run: python tools/install_contract_deps.py
 
       - name: Compile
         run: python -m compileall -q tools
@@ -59,6 +64,8 @@ jobs:
     env:
       PYTHONUTF8: "1"
       PYTHONIOENCODING: "utf-8"
+      # A missing google-genai fails tools/tests/test_google_genai_contract.py instead of skipping it
+      KHOJ_REQUIRE_GENAI_CONTRACT: "1"
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

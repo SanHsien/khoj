@@ -16,6 +16,8 @@ if (Test-Path -LiteralPath $venvPython) {
 
 $env:PYTHONUTF8 = "1"
 $env:PYTHONIOENCODING = "utf-8"
+# The google-genai contract test must run in this gate: a missing SDK fails, never skips.
+$env:KHOJ_REQUIRE_GENAI_CONTRACT = "1"
 
 function Invoke-PythonStep {
     param(
@@ -38,6 +40,9 @@ Invoke-PythonStep -Label "Compile maintained Python" -Arguments @(
 Invoke-PythonStep -Label "Ruff (E9 + F)" -Arguments @(
     "-m", "ruff", "check", "--select", "E9,F", "--target-version", "py311",
     "tools"
+)
+Invoke-PythonStep -Label "Install pinned product SDK (contract tests)" -Arguments @(
+    "tools\install_contract_deps.py"
 )
 Invoke-PythonStep -Label "Pytest (fork tools)" -Arguments @(
     "-m", "pytest", "-c", "tools/pytest.ini", "tools/tests"
