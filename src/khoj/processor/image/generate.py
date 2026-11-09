@@ -42,7 +42,6 @@ class UnsupportedImageModelError(ValueError):
     """The configured image model cannot be served by this client; retrying cannot help."""
 
 
-
 async def text_to_image(
     message: str,
     user: KhojUser,

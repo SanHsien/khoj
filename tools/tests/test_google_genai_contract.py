@@ -122,7 +122,9 @@ def adapter(monkeypatch):
         if request.url.path.endswith(":predict"):
             response = {"predictions": [{"bytesBase64Encoded": output["image"], "mimeType": "image/png"}]}
         if "streamGenerateContent" in request.url.path:
-            return httpx.Response(200, content=f"data: {json.dumps(response)}\n\n".encode(), headers={"content-type": "text/event-stream"})
+            return httpx.Response(
+                200, content=f"data: {json.dumps(response)}\n\n".encode(), headers={"content-type": "text/event-stream"}
+            )
         return httpx.Response(200, json=response)
 
     sync_init, async_init = httpx.Client.__init__, httpx.AsyncClient.__init__
@@ -138,19 +140,39 @@ def adapter(monkeypatch):
     monkeypatch.setattr(httpx.Client, "__init__", init_sync)
     monkeypatch.setattr(httpx.AsyncClient, "__init__", init_async)
     namespace = dict(
-        genai=genai, gtypes=gtypes, gerrors=genai.errors, httpx=httpx,
-        json=json, logging=logging, os=os, deepcopy=deepcopy, perf_counter=perf_counter,
-        io=io, Image=Image, Enum=Enum, logger=logging.getLogger(__name__), gemini_clients={},
+        genai=genai,
+        gtypes=gtypes,
+        gerrors=genai.errors,
+        httpx=httpx,
+        json=json,
+        logging=logging,
+        os=os,
+        deepcopy=deepcopy,
+        perf_counter=perf_counter,
+        io=io,
+        Image=Image,
+        Enum=Enum,
+        logger=logging.getLogger(__name__),
+        gemini_clients={},
         is_none_or_empty=lambda value: value is None or value == "",
-        is_promptrace_enabled=lambda: False, get_chat_usage_metrics=lambda *a, **kw: {"offline": True},
+        is_promptrace_enabled=lambda: False,
+        get_chat_usage_metrics=lambda *a, **kw: {"offline": True},
         get_ai_api_info=lambda key, url: SimpleNamespace(api_key=key, region=None, project=None, credentials=None),
     )
     load_bodies("utils/helpers.py", {"get_gemini_client", "convert_image_to_webp", "ImageShape"}, namespace)
     load_bodies("processor/conversation/utils.py", {"ResponseWithThought", "ToolCall"}, namespace)
-    load_bodies("processor/conversation/google/utils.py", {
-        "GeminiRetryableClientError", "SAFETY_SETTINGS", "MAX_OUTPUT_TOKENS_FOR_REASONING_GEMINI",
-        "MAX_OUTPUT_TOKENS_FOR_STANDARD_GEMINI", "MAX_REASONING_TOKENS_GEMINI",
-    }, namespace, all_functions=True)
+    load_bodies(
+        "processor/conversation/google/utils.py",
+        {
+            "GeminiRetryableClientError",
+            "SAFETY_SETTINGS",
+            "MAX_OUTPUT_TOKENS_FOR_REASONING_GEMINI",
+            "MAX_OUTPUT_TOKENS_FOR_STANDARD_GEMINI",
+            "MAX_REASONING_TOKENS_GEMINI",
+        },
+        namespace,
+        all_functions=True,
+    )
     yield namespace, captured, output
     for client in namespace["gemini_clients"].values():
         client.close()
@@ -174,8 +196,12 @@ def test_api_and_vertex_client_construction(adapter):
 def test_sync_completion_uses_actual_sdk(adapter, model, deepthought):
     namespace, captured, _ = adapter
     result = namespace["gemini_completion_with_backoff"](
-        [ChatMessage(role="user", content="synthetic prompt")], "synthetic system", model,
-        api_key="synthetic-not-a-real-key", deepthought=deepthought, tracer={},
+        [ChatMessage(role="user", content="synthetic prompt")],
+        "synthetic system",
+        model,
+        api_key="synthetic-not-a-real-key",
+        deepthought=deepthought,
+        tracer={},
     )
     assert result.text == "offline answer" and result.raw_content[0]["text"] == "offline answer"
     assert len(captured) == 1
@@ -184,7 +210,8 @@ def test_sync_completion_uses_actual_sdk(adapter, model, deepthought):
     assert body["systemInstruction"]["parts"][0]["text"] == "synthetic system"
     assert body["generationConfig"]["maxOutputTokens"] == 20000
     assert body["generationConfig"]["thinkingConfig"] == (
-        {"thinking_budget": 512, "include_thoughts": True} if deepthought
+        {"thinking_budget": 512, "include_thoughts": True}
+        if deepthought
         else {"thinking_level": "LOW", "include_thoughts": True}
     )
 
@@ -194,10 +221,18 @@ def test_async_stream_uses_actual_sdk(adapter):
     output["parts"] = [{"text": "synthetic thought", "thought": True}, {"text": "offline answer"}]
 
     async def collect():
-        return [part async for part in namespace["gemini_chat_completion_with_backoff"](
-            [ChatMessage(role="user", content="synthetic stream")], "gemini-2.5-flash", 0.5,
-            "synthetic-not-a-real-key", None, tracer={}, deepthought=True,
-        )]
+        return [
+            part
+            async for part in namespace["gemini_chat_completion_with_backoff"](
+                [ChatMessage(role="user", content="synthetic stream")],
+                "gemini-2.5-flash",
+                0.5,
+                "synthetic-not-a-real-key",
+                None,
+                tracer={},
+                deepthought=True,
+            )
+        ]
 
     chunks = asyncio.run(collect())
     assert [part.thought for part in chunks if part.thought] == ["synthetic thought"]
@@ -235,7 +270,10 @@ def run_image_product_path(adapter, model, config):
     output["image"] = base64.b64encode(png.getvalue()).decode()
     output["parts"] = [{"inlineData": {"mimeType": "image/png", "data": output["image"]}}]
     image = namespace["generate_image_with_google"](
-        "synthetic image", config, model, shape=namespace["ImageShape"].LANDSCAPE,
+        "synthetic image",
+        config,
+        model,
+        shape=namespace["ImageShape"].LANDSCAPE,
     )
     return image, captured
 
@@ -247,10 +285,16 @@ def assert_webp_pixel(image):
 
 # Names from https://ai.google.dev/gemini-api/docs/deprecations (Nano Banana models), plus
 # the two the product recognised before: they must all take the generate_content path.
-@pytest.mark.parametrize("model", [
-    "gemini-2.5-flash-image", "gemini-3-pro-image-preview", "gemini-3-pro-image",
-    "gemini-3.1-flash-image", "gemini-nano-banana-2.1",
-])
+@pytest.mark.parametrize(
+    "model",
+    [
+        "gemini-2.5-flash-image",
+        "gemini-3-pro-image-preview",
+        "gemini-3-pro-image",
+        "gemini-3.1-flash-image",
+        "gemini-nano-banana-2.1",
+    ],
+)
 def test_gemini_image_models_use_generate_content(adapter, model):
     config = SimpleNamespace(api_key="synthetic-not-a-real-key")
     image, captured = run_image_product_path(adapter, model, config)
@@ -301,3 +345,61 @@ def test_installed_sdk_is_the_version_khoj_pins():
     pinned = re.search(r'"google-genai\s*==\s*([^"\s]+)"', PYPROJECT.read_text(encoding="utf-8"))
     assert pinned, "pyproject.toml no longer pins google-genai exactly; update this contract"
     assert genai.__version__ == pinned.group(1), "run: python tools/install_contract_deps.py"
+
+
+def collect_text_to_image(adapter, make_error):
+    """Run the unchanged `text_to_image` with the Google call replaced by one raising `make_error(namespace)`."""
+    import contextlib
+
+    namespace = image_namespace(adapter)
+    config = SimpleNamespace(model_name="imagen-4.0-generate-001", model_type="google")
+    sentinel = type("ModelType", (), {"OPENAI": "openai", "REPLICATE": "replicate", "GOOGLE": "google"})
+
+    async def get_config(user):
+        return config
+
+    async def better_prompt(*args, **kwargs):
+        return {"description": "a cat", "shape": namespace["ImageShape"].SQUARE}
+
+    def fail(*args, **kwargs):
+        raise make_error(namespace)
+
+    openai_stub = SimpleNamespace(
+        OpenAIError=type("OpenAIError", (Exception,), {}),
+        BadRequestError=type("BadRequestError", (Exception,), {}),
+        APIConnectionError=type("APIConnectionError", (Exception,), {}),
+    )
+    namespace.update(
+        openai=openai_stub,
+        requests=__import__("requests"),
+        timer=lambda *args, **kwargs: contextlib.nullcontext(),
+        ConversationAdapters=SimpleNamespace(aget_user_text_to_image_model=get_config),
+        TextToImageModelConfig=SimpleNamespace(ModelType=sentinel),
+        generate_better_image_prompt=better_prompt,
+        generate_image_with_google=fail,
+        Intent=lambda **kwargs: None,
+        ChatMessageModel=lambda **kwargs: None,
+    )
+
+    async def collect():
+        return [
+            item
+            async for item in namespace["text_to_image"]("draw a cat", SimpleNamespace(uuid="u"), [], None, [], {})
+            if isinstance(item, tuple)
+        ]
+
+    return namespace, asyncio.run(collect())
+
+
+def test_text_to_image_reports_unsupported_model_as_400_with_advice(adapter):
+    advice = "use gemini-2.5-flash-image instead"
+    _, results = collect_text_to_image(adapter, lambda ns: ns["UnsupportedImageModelError"](advice))
+    assert results == [(None, 400, advice)]
+
+
+def test_text_to_image_keeps_unknown_error_for_a_plain_value_error(adapter):
+    # Together with the 400 case above this proves the subclass branch is checked first:
+    # the same ValueError family gives 500 here and 400 there.
+    _, results = collect_text_to_image(adapter, lambda ns: ValueError("boom"))
+    assert len(results) == 1 and results[0][0] is None and results[0][1] == 500
+    assert "unknown error" in results[0][2]

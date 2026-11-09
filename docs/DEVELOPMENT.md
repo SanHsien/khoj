@@ -41,7 +41,7 @@ pwsh -NoProfile -File tools\bootstrap_dev.ps1
 
 這套 gate **不安裝** torch、Django、sentence-transformers。它只證明維護文件、工具與契約測試能跑。
 
-唯一的產品依賴例外：gate 會先跑 `tools/install_contract_deps.py`，依 `pyproject.toml` 的釘版（`google-genai`、`google-auth`、`httpx`、`pillow`）安裝，讓 `tools/tests/test_google_genai_contract.py` 用真的 SDK 離線驗證 Gemini／圖片轉接層（只換掉 HTTP transport，不連網、不用真實金鑰）。安裝腳本不在虛擬環境（`sys.prefix == sys.base_prefix`）時拒絕執行並指向 `tools\bootstrap_dev.ps1`（CI 例外），gate 不會改動全域 Python；`bootstrap_dev.ps1` 建好 `.venv` 後也會裝一次。gate 與 CI 設 `KHOJ_REQUIRE_GENAI_CONTRACT=1`，SDK 缺席是失敗不是略過；該測試也檢查已安裝版本等於 `pyproject.toml` 的釘版（讀的是 `pyproject.toml`，不是 `uv.lock`）。Dependabot 升 `google-genai` 後，下一次 gate 就會用新版跑這份契約。
+唯一的產品依賴例外：gate 會先跑 `tools/install_contract_deps.py`，依 `pyproject.toml` 的釘版（`google-genai`、`google-auth`、`httpx`、`pillow`）安裝，讓 `tools/tests/test_google_genai_contract.py` 用真的 SDK 離線驗證 Gemini／圖片轉接層（只換掉 HTTP transport，不連網、不用真實金鑰）。安裝腳本不在虛擬環境（`sys.prefix == sys.base_prefix`）時拒絕執行並指向 `tools\bootstrap_dev.ps1`（CI 例外），gate 不會改動全域 Python；`bootstrap_dev.ps1` 建好 `.venv` 後也會裝一次。`dev_check.ps1` 每次執行都會對 `.venv` 跑一次 `pip install` 這組釘版（已滿足時不下載，但仍需要網路或暖的 pip 快取才能解析第一次、或釘版變動後的安裝）。gate 與 CI 設 `KHOJ_REQUIRE_GENAI_CONTRACT=1`，SDK 缺席是失敗不是略過；該測試也檢查已安裝版本等於 `pyproject.toml` 的釘版（讀的是 `pyproject.toml`，不是 `uv.lock`）。Dependabot 升 `google-genai` 後，下一次 gate 就會用新版跑這份契約。
 
 ### 實際跑 Khoj（建議 Docker）
 

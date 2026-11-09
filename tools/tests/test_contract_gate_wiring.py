@@ -46,7 +46,7 @@ def test_requirements_ignore_optional_dependency_groups() -> None:
 def test_dev_check_installs_the_sdk_before_pytest_and_requires_the_contract() -> None:
     script = (ROOT / "tools" / "dev_check.ps1").read_text(encoding="utf-8")
     assert f'$env:{REQUIRE} = "1"' in script
-    assert script.index(INSTALL) < script.index("-m\", \"pytest")
+    assert script.index(INSTALL) < script.index('-m", "pytest')
 
 
 def test_every_ci_job_that_runs_the_tools_tests_installs_the_sdk_and_requires_it() -> None:

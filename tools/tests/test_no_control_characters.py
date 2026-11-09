@@ -13,8 +13,21 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTROL = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f]")
-SUFFIXES = {".md", ".ps1", ".py"}
-SCANNED_DIRS = {"docs", "tools"}
+ROOT_SUFFIXES = {".md", ".ps1", ".py"}
+# First path component -> suffixes scanned beneath it ("" is the repo root itself).
+SCOPE = {
+    "": ROOT_SUFFIXES,
+    "docs": ROOT_SUFFIXES,
+    "tools": ROOT_SUFFIXES,
+    "src": {".py"},
+    ".github": {".yml", ".yaml"},
+}
+
+
+def in_scope(name: str) -> bool:
+    parts = Path(name).parts
+    key = "" if len(parts) == 1 else parts[0]
+    return Path(name).suffix in SCOPE.get(key, set())
 
 
 def offending_lines(text: str) -> list[int]:
@@ -28,11 +41,15 @@ def candidate_files() -> list[str]:
 
     # Untracked files count too: the mistake should be caught before it is committed.
     names = listing() + listing("--others", "--exclude-standard")
-    return [
-        name
-        for name in names
-        if Path(name).suffix in SUFFIXES and (len(Path(name).parts) == 1 or Path(name).parts[0] in SCANNED_DIRS)
-    ]
+    return [name for name in names if in_scope(name)]
+
+
+def test_scope_covers_product_source_and_workflows_but_not_vendored_trees() -> None:
+    assert in_scope("src/khoj/processor/image/generate.py")
+    assert in_scope(".github/workflows/ci.yml") and in_scope(".github/dependabot.yaml")
+    assert in_scope("README.md") and in_scope("tools/tests/test_x.py")
+    assert not in_scope("src/interface/web/app/page.tsx")
+    assert not in_scope("documentation/docs/intro.md")
 
 
 def test_detector_flags_backspace_but_not_tab_newline_or_carriage_return() -> None:
