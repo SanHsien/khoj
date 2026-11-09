@@ -79,15 +79,19 @@ def test_installer_runs_inside_a_venv_and_on_ci() -> None:
     assert refusal(*GLOBAL, {"CI": "false"}) is not None
 
 
-def test_running_the_installer_in_a_global_python_exits_nonzero_without_pip() -> None:
-    import os
-    import subprocess
+def test_installer_main_in_a_global_python_exits_2_and_never_reaches_pip(monkeypatch, capsys) -> None:
+    import install_contract_deps as installer
 
-    # The base interpreter of a venv is a global Python: it must be refused, not installed into.
-    base_python = getattr(sys, "_base_executable", sys.executable)
-    env = {k: v for k, v in os.environ.items() if k not in ("CI", "GITHUB_ACTIONS", "VIRTUAL_ENV")}
-    done = subprocess.run([base_python, str(ROOT / "tools" / INSTALL)], env=env, capture_output=True, text=True)
-    assert done.returncode == 2 and "bootstrap_dev.ps1" in done.stderr
+    def forbidden(*args, **kwargs):
+        raise AssertionError("pip must not be invoked from a non-venv interpreter")
+
+    monkeypatch.setattr(installer.subprocess, "call", forbidden)
+    monkeypatch.setattr(installer.sys, "prefix", "/usr")
+    monkeypatch.setattr(installer.sys, "base_prefix", "/usr")
+    monkeypatch.delenv("CI", raising=False)
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    assert installer.main([]) == 2
+    assert "bootstrap_dev.ps1" in capsys.readouterr().err
 
 
 def test_bootstrap_installs_the_contract_deps_into_the_venv() -> None:

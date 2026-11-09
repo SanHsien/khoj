@@ -217,11 +217,19 @@ class StaticTokenCredentials(Credentials):
         pass
 
 
-def run_image_product_path(adapter, model, config, output_png=True):
+def image_namespace(adapter):
+    """One namespace per test, so exception classes raised and checked are the same objects."""
+    if "_image_namespace" not in adapter[0]:
+        namespace = dict(adapter[0])  # generate.py has its own format_messages_for_gemini
+        load_bodies("processor/image/generate.py", {"UnsupportedImageModelError"}, namespace, all_functions=True)
+        adapter[0]["_image_namespace"] = namespace
+    return adapter[0]["_image_namespace"]
+
+
+def run_image_product_path(adapter, model, config):
     """Call the unchanged `generate_image_with_google` body; returns (webp bytes, requests)."""
-    namespace, captured, output = adapter
-    namespace = dict(namespace)  # generate.py has its own format_messages_for_gemini
-    load_bodies("processor/image/generate.py", set(), namespace, all_functions=True)
+    _, captured, output = adapter
+    namespace = image_namespace(adapter)
     png = io.BytesIO()
     Image.new("RGB", (1, 1), "white").save(png, "PNG")
     output["image"] = base64.b64encode(png.getvalue()).decode()
@@ -259,9 +267,15 @@ def test_imagen_with_api_key_fails_clearly_and_sends_nothing(adapter):
     """google-genai 2.x only implements generate_images for Vertex; Google shut Imagen
     down on the Gemini Developer API (2026-08-17). Fail with advice, not an SDK error."""
     config = SimpleNamespace(api_key="synthetic-not-a-real-key")
-    with pytest.raises(ValueError, match="gemini-2.5-flash-image"):
+    with pytest.raises(ValueError, match="gemini-2.5-flash-image") as raised:
         run_image_product_path(adapter, "imagen-4.0-generate-001", config)
     assert adapter[1] == []
+    # Fail fast: the retry predicate must not retry a model this client can never serve,
+    # while a plain ValueError (e.g. the SDK's own validation errors) stays retryable.
+    namespace = image_namespace(adapter)
+    assert type(raised.value).__name__ == "UnsupportedImageModelError"
+    assert not namespace["_is_retryable_image_error"](raised.value)
+    assert namespace["_is_retryable_image_error"](ValueError("transient validation error"))
 
 
 def test_imagen_on_vertex_still_uses_generate_images(adapter, monkeypatch):

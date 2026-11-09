@@ -38,6 +38,11 @@ from khoj.utils.rawconfig import LocationData
 logger = logging.getLogger(__name__)
 
 
+class UnsupportedImageModelError(ValueError):
+    """The configured image model cannot be served by this client; retrying cannot help."""
+
+
+
 async def text_to_image(
     message: str,
     user: KhojUser,
@@ -141,6 +146,10 @@ async def text_to_image(
                 status_code = e.status_code  # type: ignore
                 yield image_url or image, status_code, message
                 return
+        except UnsupportedImageModelError as e:
+            logger.error(f"Image Generation failed with {e}")
+            yield image_url or image, 400, str(e)
+            return
         except ValueError as e:
             logger.error(f"Image Generation failed with {e}", exc_info=True)
             message = f"Image generation using {text2image_model} via {text_to_image_config.model_type} failed due to an unknown error"
@@ -292,8 +301,13 @@ def generate_image_with_replicate(
     return io.BytesIO(requests.get(image_url).content).getvalue()
 
 
+def _is_retryable_image_error(exception: BaseException) -> bool:
+    """Retry transient Google errors, but fail fast on a model this client can never serve."""
+    return not isinstance(exception, UnsupportedImageModelError) and _is_retryable_error(exception)
+
+
 @retry(
-    retry=retry_if_exception(_is_retryable_error),
+    retry=retry_if_exception(_is_retryable_image_error),
     wait=wait_random_exponential(min=1, max=10),
     stop=stop_after_attempt(3),
     before_sleep=before_sleep_log(logger, logging.DEBUG),
@@ -351,7 +365,7 @@ def generate_image_with_google(
         # google-genai 2.x only implements generate_images for Vertex clients. Google also shut Imagen down on
         # the Gemini Developer API (https://ai.google.dev/gemini-api/docs/deprecations#imagen-models)
         if not client.vertexai:
-            raise ValueError(
+            raise UnsupportedImageModelError(
                 f"Google image model '{text2image_model}' is not supported with a Gemini API key. "
                 "Use a Gemini image model such as 'gemini-2.5-flash-image' instead."
             )
