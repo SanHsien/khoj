@@ -120,7 +120,7 @@ def initialization(interactive: bool = True):
 
         # Setup Google text to image model
         if google_ai_configured:
-            default_text_to_image_model = "imagen-3.0-generate-002"
+            default_text_to_image_model = "gemini-2.5-flash-image"
             if interactive:
                 gemini_text_to_image_model = input(
                     f"Enter the Google text to image model you want to use (default: {default_text_to_image_model}): "

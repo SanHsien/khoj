@@ -322,7 +322,7 @@ def generate_image_with_google(
         aspect_ratio = "1:1"
 
     image_bytes = None
-    if is_multimodal_model(text2image_model):
+    if not is_imagen_model(text2image_model):
         # Format chat history for Gemini
         contents = format_messages_for_gemini(improved_image_prompt, text2image_model, chat_history, query_images)
 
@@ -348,6 +348,13 @@ def generate_image_with_google(
         if not image_bytes:
             raise ValueError("Failed to generate image using Google AI")
     else:
+        # google-genai 2.x only implements generate_images for Vertex clients. Google also shut Imagen down on
+        # the Gemini Developer API (https://ai.google.dev/gemini-api/docs/deprecations#imagen-models)
+        if not client.vertexai:
+            raise ValueError(
+                f"Google image model '{text2image_model}' is not supported with a Gemini API key. "
+                "Use a Gemini image model such as 'gemini-2.5-flash-image' instead."
+            )
         # Configure image generation settings
         config = gtypes.GenerateImagesConfig(
             number_of_images=1,
@@ -437,7 +444,13 @@ def format_messages_for_gemini(
     return contents
 
 
+def is_imagen_model(model_name: str) -> bool:
+    """Check if the model is an Imagen model, which only generate_images (Vertex) can serve"""
+    return model_name.lower().startswith("imagen")
+
+
 def is_multimodal_model(model_name: str) -> bool:
     """Check if the model can see and generate images"""
-    multimodal_models = ["gemini-2.5-flash-image", "gemini-3-pro-image-preview"]
-    return model_name.lower() in multimodal_models
+    name = model_name.lower()
+    # Gemini image models (e.g. gemini-2.5-flash-image, gemini-3-pro-image, nano banana) generate via generate_content
+    return name.startswith("gemini") and ("image" in name or "nano-banana" in name)
