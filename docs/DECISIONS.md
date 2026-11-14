@@ -610,3 +610,12 @@ elif event_type in (ChatEvent.REFERENCES, ChatEvent.METADATA, ChatEvent.END_LLM_
 ## 2026-11-14：Dependabot #120、#122、#123 改在 main 上套用並重新鎖定
 
 這三個 PR 只改 `pyproject.toml`（authlib 1.9.1→1.9.5、django 5.2.18→5.2.19、anyio 上限 `<4.16`→`<4.17`），沒有更新 `uv.lock`；直接合併會再次造成這次剛修好的鎖檔不同步。因此在 main 上照 PR 內容改 `pyproject.toml` 後 `uv lock`（鎖檔 authlib 1.9.5、django 5.2.19，anyio 解析版本不變），`uv lock --check` 通過。依新鎖檔重建環境後 `tests/unit`、`tests/test_plaintext_to_entries.py`、`tests/test_read_webpage.py` 共 26 passed，`tools/dev_check.ps1` 綠。PR 由 Dependabot 依 main 現況自動關閉。#121（pymupdf 2.1）照 `ROADMAP.md` 中期列「`pymupdf` 升 2.x」的觸發條件繼續延後，不合併。
+
+## 2026-11-15：上游 PR #1464、#1465 分類
+
+上游 `khoj-ai/khoj` 的 `master` 仍為 `ae229ca894c0b80ad84664afcfdde523b5e87057`。PR 水位由 #1460 推進至 #1465；issue 無新增，維持 #1461。水位代表已審查，不代表採用。
+
+| PR | 結論 | 理由 | 重新審查條件 |
+| --- | --- | --- | --- |
+| [#1464](https://github.com/khoj-ai/khoj/pull/1464) 加密 PDF | **skip** | 已關閉、未合併（2026-11-08 作者自行關閉，留言「Closing PR opened in error」；內文的「Fixes #1204」指向的是無關的「索引與搜尋時排除檔案」issue）；審查 head `ad310fbef371ec60083713369b4ac0a75a2175ce` 的完整四檔 diff。新增的 `document_processor.py` 依賴 SQLModel Session、本線不存在的 `Document`／`ProcessingStatus` 與 `file_to_entries`；新增 `text_extractor.py` 使用 pypdf，未接入現行 `PdfToEntries`／PyMuPDFLoader 上傳路徑。現行 `extract_text` 已捕捉解析例外並回傳空清單，不能由此 PR 推定本線也有 PROCESSING 狀態卡住的缺陷：`src/khoj`、`pyproject.toml` grep 不到 `sqlmodel`、`ProcessingStatus`、`file_to_entries`、`pypdf`；2026-11-15 以本線釘住的 `pymupdf 1.28.2`＋`langchain-community 0.3.31` 對 AES-256 加使用者密碼的 PDF 實跑 `PyMuPDFLoader(...).load()`，丟出 `TypeError: 'NoneType' object is not iterable`，正落在 `extract_text` 的 `except Exception`，結果是該檔記警告、不索引，其他檔照常處理（未啟動伺服器走完整上傳流程）。已知的不足是使用者只在伺服器日誌看得到原因，介面不會說明這份 PDF 因加密被略過；這不是此 PR 修的東西。不移植未接線且不相容的處理器，也不新增 SQLModel 依賴。 | 上游提供接入實際 PyMuPDF 上傳路徑的修訂，或本線重現加密 PDF 導致整批上傳失敗／狀態卡住，或維護者要在介面上看到「因加密被略過」的提示時，以該路徑的失敗測試重新評估。 |
+| [#1465](https://github.com/khoj-ai/khoj/pull/1465) Outcrawl 搜尋與網頁讀取 | **defer** | 審查 head `80a453d6c0a4e0580d770ce5f40f0eaec25e643e` 的完整八檔 diff。透過 `OUTCRAWL_API_KEY` 的 Bearer 金鑰呼叫第三方雲端 `/v1/search`、`/v1/scrape`，並新增 WebScraper 選項、migration 0100、環境設定與文件；PR 在 2026-11-15 仍為 OPEN、未合併，作者自述任職於 Outcrawl。金鑰是必要的（未設 `OUTCRAWL_API_KEY` 時整段不啟用），但不一定要付費：PR 文件寫免費方案每月 1,000 credits，此額度未另行查證。屬新供應商功能、非缺陷修正，沿用 2026-09-30 對第三方服務整合的 follow-upstream 分類（2026-10-25 對新功能 #1459 與提供者新增也未採用），保留現有搜尋與直接讀網頁路徑。 | 上游合併進 master 後隨同步重新審查，或本線明確需要此供應商並具備金鑰、資料傳送範圍與配額驗收條件時再評估。 |
