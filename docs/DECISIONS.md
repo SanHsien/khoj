@@ -584,3 +584,15 @@ elif event_type in (ChatEvent.REFERENCES, ChatEvent.METADATA, ChatEvent.END_LLM_
 **契約測試**：`tools/install_contract_deps.py` 從 `pyproject.toml` 讀 `google-genai`／`google-auth`／`httpx`／`pillow` 的釘版安裝；`dev_check.ps1` 與 `ci.yml` 的 Ubuntu 矩陣在跑 pytest 前執行它，並設 `KHOJ_REQUIRE_GENAI_CONTRACT=1`（缺 SDK 失敗而非略過）；`tools/tests/test_contract_gate_wiring.py` 釘住這個接線。契約測試涵蓋對話、串流、五個 Gemini 圖片模型名、Imagen 在 API 金鑰模式（明確報錯且不送請求）與 Vertex 模式（`:predict`）。用 `ChatMessage` 的最小替身，不再為了測試安裝 langchain-core。紅綠：還原產品修正後該檔 4 failed（三個現行 Gemini 圖片模型名與 Imagen API 金鑰案例），套上後全數通過。Imagen API 金鑰案例丟 `UnsupportedImageModelError`（`ValueError` 子類）：重試判斷對它不重試（立即失敗），`text_to_image` 回 400 並帶出建議訊息，不再是重試 3 次後的 unknown error。
 
 **未做**：Vertex 用戶若把服務帳戶設在 `ai_model_api`（以 googleapis 網址）而非環境變數，圖片路徑仍不支援，與上游一致，另列 `ROADMAP.md`。`uv.lock` 解析的是 `google-genai` 2.32.0、`pyproject.toml` 釘 2.34.0（既有的鎖檔不同步，見 2026-11-08 條目與 `ROADMAP.md`）；契約測試以 `pyproject.toml` 為準。無真實 Gemini 金鑰，沒有對線上 API 驗證。
+
+## 2026-11-14：`uv.lock` 與 `pyproject.toml` 重新同步並在 Windows 實測伺服器
+
+**做法**：`uv lock` 重新解析，`uv lock --check` 通過（Resolved 226 packages）。版本變動含 `tzdata` 2026.5→2026.6、`stripe` 7.14.0→7.14.1、`google-genai` 2.32.0→2.34.0（與 `pyproject.toml` 一致）、`torch` 2.14.1→2.15.0，以及連動的 CUDA 套件（`nvidia-*` 升級、新增 `nvidia-cuda-cccl`、移除 `nvidia-curand`）。
+
+**實測**（依 [`DEVELOPMENT.md`](DEVELOPMENT.md)「用內嵌 Postgres 在 Windows 跑伺服器」，`uv sync --frozen --python 3.11 --extra dev`，venv 與資料目錄都在 repo 外；本機 Ollama `qwen3:0.6b`）：
+
+- PDF 匯入：`PUT /api/content?t=pdf` 傳 `tests/data/pdf/singlepage.pdf`、`multipage.pdf` 回 200，log 有 `Converted 7 PDF entries`、`Added 13 pdf entries to database`。
+- 聊天：`POST /api/chat`（`stream=false`）回 200 並有回覆，匯入後立刻送出也成功。
+- 研究模式：`/research` 回 200 並收尾。模型以工具呼叫選了 `list_files` 2 次（`path=user_khoj_files`、`pattern=*`），第 2 次被判為重複呼叫而略過，結果是「Found 0 files」；最後一輪回「Failed to get results」，最終以文字回覆收尾。也就是說，工具呼叫的流程跑通了，但沒有找到內容；小模型的檢索品質與 2026-11-08 的觀察一樣不可靠。
+
+**觀察（未重現）**：第一次啟動的伺服器上，第一個聊天請求在 PDF 匯入後 4 秒回了 500。log 只剩 asyncio 例外處理器在用 rich 印 traceback 時遇到 `RecursionError`，原始例外被吞掉。重啟後同樣的請求連續 4 次（含匯入後立刻送出）都是 200，無法重現，所以沒有改程式。再遇到時先設 `COLUMNS=300` 讓 rich 印出完整 traceback。

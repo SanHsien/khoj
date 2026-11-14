@@ -11,7 +11,6 @@
 ## 近期：可以直接動手
 | 項目 | 為什麼 | 驗收方式 | 建議執行者 | 證據 |
 | --- | --- | --- | --- | --- |
-| 讓 `uv.lock` 與 `pyproject.toml` 重新同步 | `uv lock --check` 在 `944454b3` 失敗：Dependabot 合併（2026-11-03）後 `pyproject.toml` 已要求 `tzdata == 2026.6`、`stripe 7.14.1`，鎖檔仍是 2026.5／7.14.0；`uv lock --dry-run` 還會連動 `torch`、`google-genai` 與 CUDA 套件（鎖檔解析 `google-genai` 2.32.0，`pyproject.toml` 釘 2.34.0；`tools/tests/test_google_genai_contract.py` 以 `pyproject.toml` 為準）。2026-11-08 的伺服器實測因此用 `uv sync --frozen`，沒測到新版 | `uv lock` 後 `uv lock --check` 通過；`uv sync --frozen --python 3.11 --extra dev` 後照 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)「用內嵌 Postgres 在 Windows 跑伺服器」啟動，PDF 匯入、聊天、研究模式各跑一次成功 | Claude Sonnet | [`docs/DECISIONS.md`](docs/DECISIONS.md) 2026-11-08 條目 |
 
 ## 中期：等條件成立再做
 | 項目 | 觸發條件 | 驗收方式 | 建議執行者 | 證據 |
