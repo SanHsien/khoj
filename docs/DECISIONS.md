@@ -606,3 +606,7 @@ elif event_type in (ChatEvent.REFERENCES, ChatEvent.METADATA, ChatEvent.END_LLM_
 **決定**：`requires-python` 由 `>=3.11, <3.13` 改為 `>=3.11.5, <3.13`，重新鎖定後只剩 soupsieve 4.1。CI 矩陣與發版流程用的 3.11 都是最新修補版（`pypi.yml` 固定 3.11.12），3.11.0～3.11.4 是 2023 年以前的版本，提高下限沒有實際影響。
 
 **驗證**：`uv lock --check` 通過；依新鎖檔重建環境（soupsieve 4.1、dnspython 2.9.2、bs4 4.15.0），`tests/test_plaintext_to_entries.py` 與 `tests/test_read_webpage.py` 共 8 passed；BeautifulSoup 的 CSS 選擇器（`div.a p`、`p.b`、`:not()`）與 lxml 文字擷取實跑結果正確。Dependabot PR #124（dnspython）會因 main 已更新而自動關閉。
+
+## 2026-11-14：Dependabot #120、#122、#123 改在 main 上套用並重新鎖定
+
+這三個 PR 只改 `pyproject.toml`（authlib 1.9.1→1.9.5、django 5.2.18→5.2.19、anyio 上限 `<4.16`→`<4.17`），沒有更新 `uv.lock`；直接合併會再次造成這次剛修好的鎖檔不同步。因此在 main 上照 PR 內容改 `pyproject.toml` 後 `uv lock`（鎖檔 authlib 1.9.5、django 5.2.19，anyio 解析版本不變），`uv lock --check` 通過。依新鎖檔重建環境後 `tests/unit`、`tests/test_plaintext_to_entries.py`、`tests/test_read_webpage.py` 共 26 passed，`tools/dev_check.ps1` 綠。PR 由 Dependabot 依 main 現況自動關閉。#121（pymupdf 2.1）照 `ROADMAP.md` 中期列「`pymupdf` 升 2.x」的觸發條件繼續延後，不合併。
