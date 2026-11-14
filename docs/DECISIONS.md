@@ -596,3 +596,13 @@ elif event_type in (ChatEvent.REFERENCES, ChatEvent.METADATA, ChatEvent.END_LLM_
 - 研究模式：`/research` 回 200 並收尾。模型以工具呼叫選了 `list_files` 2 次（`path=user_khoj_files`、`pattern=*`），第 2 次被判為重複呼叫而略過，結果是「Found 0 files」；最後一輪回「Failed to get results」，最終以文字回覆收尾。也就是說，工具呼叫的流程跑通了，但沒有找到內容；小模型的檢索品質與 2026-11-08 的觀察一樣不可靠。
 
 **觀察（未重現）**：第一次啟動的伺服器上，第一個聊天請求在 PDF 匯入後 4 秒回了 500。log 只剩 asyncio 例外處理器在用 rich 印 traceback 時遇到 `RecursionError`，原始例外被吞掉。重啟後同樣的請求連續 4 次（含匯入後立刻送出）都是 200，無法重現，所以沒有改程式。再遇到時先設 `COLUMNS=300` 讓 rich 印出完整 traceback。
+
+## 2026-11-14：dnspython 與 soupsieve 安全修補，Python 下限提到 3.11.5
+
+**背景**：推送 `0d2f9ec6` 時 GitHub 列出 4 個 open Dependabot 告警，都在 `uv.lock`：dnspython #383（high，修補版 2.9.2）、soupsieve #380（high，descendant combinator 多項式時間 DoS，`< 4.0.0` 受影響）、#381、#382。都是 2026-11-13～14 才公告的新弱點，與鎖檔同步無關。
+
+**做法**：`uv lock --upgrade-package dnspython --upgrade-package soupsieve` 後，dnspython 升到 2.9.2；soupsieve 卻分成兩份：Python `>= 3.11.5` 用 4.1，`< 3.11.5` 仍留 2.10（4.x 要求 Python 3.11.5 以上）。`pyproject.toml` 原本寫 `>=3.11`，只要 2.10 還在鎖檔，告警就會一直開著。
+
+**決定**：`requires-python` 由 `>=3.11, <3.13` 改為 `>=3.11.5, <3.13`，重新鎖定後只剩 soupsieve 4.1。CI 矩陣與發版流程用的 3.11 都是最新修補版（`pypi.yml` 固定 3.11.12），3.11.0～3.11.4 是 2023 年以前的版本，提高下限沒有實際影響。
+
+**驗證**：`uv lock --check` 通過；依新鎖檔重建環境（soupsieve 4.1、dnspython 2.9.2、bs4 4.15.0），`tests/test_plaintext_to_entries.py` 與 `tests/test_read_webpage.py` 共 8 passed；BeautifulSoup 的 CSS 選擇器（`div.a p`、`p.b`、`:not()`）與 lxml 文字擷取實跑結果正確。Dependabot PR #124（dnspython）會因 main 已更新而自動關閉。

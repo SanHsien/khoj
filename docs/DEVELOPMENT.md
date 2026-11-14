@@ -53,7 +53,7 @@ docker compose up -d
 
 ### 從原始碼跑（選配，重）
 
-上游要求 Python **3.11–3.12**（`pyproject.toml` 寫 `>=3.11, <3.13`；3.10 已於 2026-10 放棄支援），以及 Postgres + pgvector、前端 bun 建置：
+本 fork 要求 Python **3.11.5–3.12**（`pyproject.toml` 寫 `>=3.11.5, <3.13`；上游仍是 `>=3.10`，3.10 與 3.11.0–3.11.4 是 fork 自行放棄，見 [`DECISIONS.md`](DECISIONS.md) 2026-10-25、2026-11-14），另外需要 Postgres + pgvector 與前端 bun 建置：
 
 ```powershell
 # 另開一個 3.12 venv，不要跟維護用的 .venv 混在一起
