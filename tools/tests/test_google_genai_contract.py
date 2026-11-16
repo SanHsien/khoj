@@ -18,6 +18,7 @@ import ast
 import asyncio
 import base64
 import importlib
+import importlib.util
 import io
 import json
 import logging
@@ -47,6 +48,9 @@ def need(module):
 genai = need("google.genai")
 httpx = need("httpx")
 gtypes = need("google.genai.types")
+# google-genai 3.x defaults to `httpx2` (pydantic's httpx fork) and only uses `httpx` when told to.
+# The transport stub must cover every backend the SDK can pick, or requests leave the machine.
+httpx2 = importlib.import_module("httpx2") if importlib.util.find_spec("httpx2") else None
 Image = need("PIL.Image")
 _credentials = need("google.auth.credentials")
 AnonymousCredentials, Credentials = _credentials.AnonymousCredentials, _credentials.Credentials
@@ -112,7 +116,7 @@ def adapter(monkeypatch):
     captured = []
     output = {"parts": [{"text": "offline answer"}]}
 
-    def transport(request):
+    def transport(request, response_cls):
         body = json.loads(request.content)
         captured.append((str(request.url), body))
         response = {
@@ -122,23 +126,29 @@ def adapter(monkeypatch):
         if request.url.path.endswith(":predict"):
             response = {"predictions": [{"bytesBase64Encoded": output["image"], "mimeType": "image/png"}]}
         if "streamGenerateContent" in request.url.path:
-            return httpx.Response(
+            return response_cls(
                 200, content=f"data: {json.dumps(response)}\n\n".encode(), headers={"content-type": "text/event-stream"}
             )
-        return httpx.Response(200, json=response)
+        return response_cls(200, json=response)
 
-    sync_init, async_init = httpx.Client.__init__, httpx.AsyncClient.__init__
+    def patch_backend(backend):
+        """Route every client of one httpx-compatible backend through the stub transport."""
+        sync_init, async_init = backend.Client.__init__, backend.AsyncClient.__init__
 
-    def init_sync(self, *args, **kwargs):
-        kwargs["transport"] = httpx.MockTransport(transport)
-        sync_init(self, *args, **kwargs)
+        def init_sync(self, *args, **kwargs):
+            kwargs["transport"] = backend.MockTransport(lambda request: transport(request, backend.Response))
+            sync_init(self, *args, **kwargs)
 
-    def init_async(self, *args, **kwargs):
-        kwargs["transport"] = httpx.MockTransport(transport)
-        async_init(self, *args, **kwargs)
+        def init_async(self, *args, **kwargs):
+            kwargs["transport"] = backend.MockTransport(lambda request: transport(request, backend.Response))
+            async_init(self, *args, **kwargs)
 
-    monkeypatch.setattr(httpx.Client, "__init__", init_sync)
-    monkeypatch.setattr(httpx.AsyncClient, "__init__", init_async)
+        monkeypatch.setattr(backend.Client, "__init__", init_sync)
+        monkeypatch.setattr(backend.AsyncClient, "__init__", init_async)
+
+    for backend in (httpx, httpx2):
+        if backend is not None:
+            patch_backend(backend)
     namespace = dict(
         genai=genai,
         gtypes=gtypes,
@@ -305,6 +315,17 @@ def test_gemini_image_models_use_generate_content(adapter, model):
     assert body["generationConfig"]["responseModalities"] == ["IMAGE"]
     if model.startswith("gemini-3"):
         assert body["generationConfig"]["imageConfig"]["imageSize"] == "2K"
+
+
+@pytest.mark.parametrize("backend", [httpx, httpx2], ids=["httpx", "httpx2"])
+def test_timeouts_from_every_http_backend_are_retried(adapter, backend):
+    """google-genai 3.x raises httpx2 errors by default; they must still be retried."""
+    if backend is None:
+        pytest.skip("httpx2 is not installed (google-genai < 3)")
+    namespace, _, _ = adapter
+    assert namespace["_is_retryable_error"](backend.ReadTimeout("synthetic timeout"))
+    assert namespace["_is_retryable_error"](backend.ConnectError("synthetic network error"))
+    assert not namespace["_is_retryable_error"](RuntimeError("synthetic"))
 
 
 def test_imagen_with_api_key_fails_clearly_and_sends_nothing(adapter):

@@ -619,3 +619,11 @@ elif event_type in (ChatEvent.REFERENCES, ChatEvent.METADATA, ChatEvent.END_LLM_
 | --- | --- | --- | --- |
 | [#1464](https://github.com/khoj-ai/khoj/pull/1464) 加密 PDF | **skip** | 已關閉、未合併（2026-11-08 作者自行關閉，留言「Closing PR opened in error」；內文的「Fixes #1204」指向的是無關的「索引與搜尋時排除檔案」issue）；審查 head `ad310fbef371ec60083713369b4ac0a75a2175ce` 的完整四檔 diff。新增的 `document_processor.py` 依賴 SQLModel Session、本線不存在的 `Document`／`ProcessingStatus` 與 `file_to_entries`；新增 `text_extractor.py` 使用 pypdf，未接入現行 `PdfToEntries`／PyMuPDFLoader 上傳路徑。現行 `extract_text` 已捕捉解析例外並回傳空清單，不能由此 PR 推定本線也有 PROCESSING 狀態卡住的缺陷：`src/khoj`、`pyproject.toml` grep 不到 `sqlmodel`、`ProcessingStatus`、`file_to_entries`、`pypdf`；2026-11-15 以本線釘住的 `pymupdf 1.28.2`＋`langchain-community 0.3.31` 對 AES-256 加使用者密碼的 PDF 實跑 `PyMuPDFLoader(...).load()`，丟出 `TypeError: 'NoneType' object is not iterable`，正落在 `extract_text` 的 `except Exception`，結果是該檔記警告、不索引，其他檔照常處理（未啟動伺服器走完整上傳流程）。已知的不足是使用者只在伺服器日誌看得到原因，介面不會說明這份 PDF 因加密被略過；這不是此 PR 修的東西。不移植未接線且不相容的處理器，也不新增 SQLModel 依賴。 | 上游提供接入實際 PyMuPDF 上傳路徑的修訂，或本線重現加密 PDF 導致整批上傳失敗／狀態卡住，或維護者要在介面上看到「因加密被略過」的提示時，以該路徑的失敗測試重新評估。 |
 | [#1465](https://github.com/khoj-ai/khoj/pull/1465) Outcrawl 搜尋與網頁讀取 | **defer** | 審查 head `80a453d6c0a4e0580d770ce5f40f0eaec25e643e` 的完整八檔 diff。透過 `OUTCRAWL_API_KEY` 的 Bearer 金鑰呼叫第三方雲端 `/v1/search`、`/v1/scrape`，並新增 WebScraper 選項、migration 0100、環境設定與文件；PR 在 2026-11-15 仍為 OPEN、未合併，作者自述任職於 Outcrawl。金鑰是必要的（未設 `OUTCRAWL_API_KEY` 時整段不啟用），但不一定要付費：PR 文件寫免費方案每月 1,000 credits，此額度未另行查證。屬新供應商功能、非缺陷修正，沿用 2026-09-30 對第三方服務整合的 follow-upstream 分類（2026-10-25 對新功能 #1459 與提供者新增也未採用），保留現有搜尋與直接讀網頁路徑。 | 上游合併進 master 後隨同步重新審查，或本線明確需要此供應商並具備金鑰、資料傳送範圍與配額驗收條件時再評估。 |
+
+## 2026-11-17：Dependabot #125、#126、#127 改在 main 上套用並重新鎖定
+
+**決定**：#125（`sentence-transformers` 6.3.0）、#127（`click < 8.5.2`）、#126（`google-genai` 3.3.0）都手動改 `pyproject.toml` 並 `uv lock`，不合併 PR（Dependabot 不更新 `uv.lock`）。
+
+**#126 根因**：google-genai 3.x 預設改用 `httpx2`（pydantic 維護的 httpx 分支），不再是 `httpx`。(1) 契約測試只替換 `httpx` 的 transport，請求直接連外，被網路禁令擋下，造成 CI 5 項紅燈；(2) 產品 `_is_retryable_error` 只認 `httpx` 的逾時／網路例外，改版後 `httpx2` 例外不會被重試。**處置**：測試同時替換兩個後端；產品改成兩個後端的例外都重試，並加 `test_timeouts_from_every_http_backend_are_retried`（對舊碼會失敗）。
+
+**驗證**：`uv lock --check`、`tools\dev_check.ps1`（以 3.3.0 跑契約測試）通過。未用真實 API 金鑰呼叫 Gemini／Vertex，也未跑需要資料庫的產品測試。

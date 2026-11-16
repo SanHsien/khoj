@@ -114,13 +114,27 @@ def _gemini_retry_error_callback(retry_state: RetryCallState):
         raise exc
 
 
+def _httpx_retryable_errors() -> tuple:
+    """Timeout and network errors worth retrying, from every HTTP backend google-genai may use.
+
+    google-genai >= 3 defaults to `httpx2` (pydantic's httpx fork), whose exceptions are not
+    subclasses of `httpx`'s, so both backends must be matched.
+    """
+    errors: tuple = (httpx.TimeoutException, httpx.NetworkError)
+    try:
+        import httpx2
+    except ImportError:  # httpx2 only ships with google-genai >= 3
+        return errors
+    return errors + (httpx2.TimeoutException, httpx2.NetworkError)
+
+
 def _is_retryable_error(exception: BaseException) -> bool:
     """Check if the exception is a retryable error"""
     # server errors
     if isinstance(exception, (gerrors.APIError, gerrors.ClientError, GeminiRetryableClientError)):
         return exception.code in [429, 502, 503, 504]
     # client errors
-    if isinstance(exception, httpx.TimeoutException) or isinstance(exception, httpx.NetworkError):
+    if isinstance(exception, _httpx_retryable_errors()):
         return True
     # validation errors
     if isinstance(exception, ValueError):
