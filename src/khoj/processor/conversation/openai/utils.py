@@ -523,13 +523,8 @@ def responses_completion_with_backoff(
         aggregated_text = json.dumps([tool_call.__dict__ for tool_call in tool_calls])
 
     # Usage/cost tracking
-    input_tokens = model_response.usage.input_tokens if model_response and model_response.usage else 0
-    output_tokens = model_response.usage.output_tokens if model_response and model_response.usage else 0
+    input_tokens, output_tokens, cache_read_tokens = get_responses_usage_token_counts(model_response)
     cost = 0
-    cache_read_tokens = 0
-    if model_response and model_response.usage and model_response.usage.input_tokens_details:
-        cache_read_tokens = model_response.usage.input_tokens_details.cached_tokens
-        input_tokens -= cache_read_tokens
     tracer["usage"] = get_chat_usage_metrics(
         model_name, input_tokens, output_tokens, cache_read_tokens, usage=tracer.get("usage"), cost=cost
     )
@@ -675,13 +670,8 @@ async def responses_chat_completion_with_backoff(
         last_final = await stream.get_final_response()
 
     # Usage/cost tracking after stream ends
-    input_tokens = last_final.usage.input_tokens if last_final and last_final.usage else 0
-    output_tokens = last_final.usage.output_tokens if last_final and last_final.usage else 0
+    input_tokens, output_tokens, cache_read_tokens = get_responses_usage_token_counts(last_final)
     cost = 0
-    cache_read_tokens = 0
-    if last_final and last_final.usage and last_final.usage.input_tokens_details:
-        cache_read_tokens = last_final.usage.input_tokens_details.cached_tokens
-        input_tokens -= cache_read_tokens
     tracer["usage"] = get_chat_usage_metrics(
         model_name, input_tokens, output_tokens, cache_read_tokens, usage=tracer.get("usage"), cost=cost
     )
@@ -718,6 +708,24 @@ async def responses_chat_completion_with_backoff(
             thoughts = tracer.pop("_responses_stream_text")
             trace_payload = thoughts
         commit_conversation_trace(messages, trace_payload, tracer)
+
+
+def get_responses_usage_token_counts(response) -> tuple[int, int, int]:
+    """Get (uncached input, output, cache read) token counts from a Responses API response.
+
+    Input tokens include cached tokens, so cached tokens are counted only as cache reads.
+    Output tokens already include reasoning tokens. Missing or null counts are zero.
+    """
+    usage = getattr(response, "usage", None)
+    if not usage:
+        return 0, 0, 0
+    input_tokens = getattr(usage, "input_tokens", 0) or 0
+    output_tokens = getattr(usage, "output_tokens", 0) or 0
+    cache_read_tokens = 0
+    input_details = getattr(usage, "input_tokens_details", None)
+    if input_details:
+        cache_read_tokens = getattr(input_details, "cached_tokens", 0) or 0
+    return max(input_tokens - cache_read_tokens, 0), output_tokens, cache_read_tokens
 
 
 def get_chat_completion_usage_token_counts(usage) -> tuple[int, int, int]:

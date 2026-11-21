@@ -118,3 +118,47 @@ def test_chat_completion_input_tokens_exclude_cached_prompt_tokens():
     )
     assert counts(null_cache) == (10, 5, 0)
     assert counts(None) == (0, 0, 0)
+
+
+def test_responses_api_null_token_counts_are_zero():
+    # Responses API usage: input_tokens include input_tokens_details.cached_tokens. OpenAI-compatible
+    # providers can report the detail counts (or the details object) as null; that must not raise.
+    counts = load("processor/conversation/openai/utils.py", ["get_responses_usage_token_counts"])[
+        "get_responses_usage_token_counts"
+    ]
+    usage = SimpleNamespace(
+        input_tokens=10_000, output_tokens=200, input_tokens_details=SimpleNamespace(cached_tokens=8_000)
+    )
+    assert counts(SimpleNamespace(usage=usage)) == (2_000, 200, 8_000)
+    null_cache = SimpleNamespace(
+        input_tokens=10,
+        output_tokens=5,
+        input_tokens_details=SimpleNamespace(cached_tokens=None),
+        output_tokens_details=SimpleNamespace(reasoning_tokens=None),
+    )
+    assert counts(SimpleNamespace(usage=null_cache)) == (10, 5, 0)
+    no_details = SimpleNamespace(input_tokens=10, output_tokens=5, input_tokens_details=None)
+    assert counts(SimpleNamespace(usage=no_details)) == (10, 5, 0)
+    null_counts = SimpleNamespace(input_tokens=None, output_tokens=None, input_tokens_details=None)
+    assert counts(SimpleNamespace(usage=null_counts)) == (0, 0, 0)
+    assert counts(SimpleNamespace(usage=None)) == (0, 0, 0)
+    assert counts(None) == (0, 0, 0)
+
+
+def test_responses_api_paths_share_the_null_safe_token_counter():
+    # Both the sync and streaming Responses paths must go through the null-safe counter,
+    # not subtract usage.input_tokens_details.cached_tokens inline (TypeError when it is null).
+    source = (ROOT / "processor/conversation/openai/utils.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    for name in ("responses_completion_with_backoff", "responses_chat_completion_with_backoff"):
+        function = next(
+            node
+            for node in tree.body
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == name
+        )
+        called = {
+            node.func.id for node in ast.walk(function) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+        }
+        attributes = {node.attr for node in ast.walk(function) if isinstance(node, ast.Attribute)}
+        assert "get_responses_usage_token_counts" in called, name
+        assert "cached_tokens" not in attributes, name
