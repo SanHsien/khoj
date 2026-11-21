@@ -2,8 +2,15 @@
   "repo": "https://github.com/khoj-ai/khoj.git",
   "branch": "master",
   "reviewed_through": "ae229ca894c0b80ad84664afcfdde523b5e87057",
-  "reviewed_date": "2026-11-21",
-  "notes": "Fork created from upstream master ae229ca (chat export pagination fix #1314). Publish workflows gated to khoj-ai/khoj. 2026-08-30：PR 水位 1412 → 1417、issue 1415 → 1416。#1417（defilter 沒清掉 -file: 排除過濾器）在本 fork 實測重現後採用；issue #1416 是設定寫法說明、無可引用的程式變更。理由與實測表見 docs/DECISIONS.md 同日條目。 2026-09-30：PR 水位 1417 → 1444、issue 1416 → 1439；採用 #1441／#1443／#1444（小修正），其餘 PR 為 adoption pending 或 follow-upstream，見 docs/DECISIONS.md 同日條目。 2026-10-25：上游 master 仍在 ae229ca（無新提交）；PR 水位 1444 → 1460、issue 水位 1439 → 1446。採用 #1452（Gemini 回應無 usage_metadata 時不再崩潰）與 #1456（連線檢查加 5 秒逾時並移出 event loop），其餘見 docs/DECISIONS.md 同日條目。 2026-10-28：上游 master 仍在 ae229ca、PR 無新增；issue 水位 1446 → 1461（#1461 magika 與 Python 3.13，本 fork requires-python <3.13，不處理），見 docs/DECISIONS.md 同日條目。 2026-11-15：PR 水位 1460 → 1465；#1464 skip（處理器與現行架構不相容且未接入上傳路徑），#1465 defer（需金鑰的第三方搜尋／讀取服務）；issue 無新增、維持 1461，詳見 docs/DECISIONS.md 同日分類表。 2026-11-21：上游 master 仍在 ae229ca；PR 水位 1465 → 1475、issue 水位 1461 → 1474。#1470 部分重做採用（費用計算的快取讀取、思考 token、價格表修正，不引入 llm-prices 依賴），#1469、#1471、#1475 文件 PR 與 issue #1473、#1474 skip，詳見 docs/DECISIONS.md 同日分類表。",
-  "reviewed_pr_through": 1475,
-  "reviewed_issue_through": 1474
+  "reviewed_date": "2026-11-22",
+  "notes": "Fork created from upstream master ae229ca (chat export pagination fix #1314). Publish workflows gated to khoj-ai/khoj. 2026-08-30：PR 水位 1412 → 1417、issue 1415 → 1416。#1417（defilter 沒清掉 -file: 排除過濾器）在本 fork 實測重現後採用；issue #1416 是設定寫法說明、無可引用的程式變更。理由與實測表見 docs/DECISIONS.md 同日條目。 2026-09-30：PR 水位 1417 → 1444、issue 1416 → 1439；採用 #1441／#1443／#1444（小修正），其餘 PR 為 adoption pending 或 follow-upstream，見 docs/DECISIONS.md 同日條目。 2026-10-25：上游 master 仍在 ae229ca（無新提交）；PR 水位 1444 → 1460、issue 水位 1439 → 1446。採用 #1452（Gemini 回應無 usage_metadata 時不再崩潰）與 #1456（連線檢查加 5 秒逾時並移出 event loop），其餘見 docs/DECISIONS.md 同日條目。 2026-10-28：上游 master 仍在 ae229ca、PR 無新增；issue 水位 1446 → 1461（#1461 magika 與 Python 3.13，本 fork requires-python <3.13，不處理），見 docs/DECISIONS.md 同日條目。 2026-11-15：PR 水位 1460 → 1465；#1464 skip（處理器與現行架構不相容且未接入上傳路徑），#1465 defer（需金鑰的第三方搜尋／讀取服務）；issue 無新增、維持 1461，詳見 docs/DECISIONS.md 同日分類表。 2026-11-21：上游 master 仍在 ae229ca；PR 水位 1465 → 1475、issue 水位 1461 → 1474。#1470 部分重做採用（費用計算的快取讀取、思考 token、價格表修正，不引入 llm-prices 依賴），#1469、#1471、#1475 文件 PR 與 issue #1473、#1474 skip，詳見 docs/DECISIONS.md 同日分類表。 2026-11-22：上游 master 仍在 ae229ca；PR 水位 1475 → 1477、issue 無新增維持 1474。#1476 defer（FilesMenu 重新掛載與過期請求的小修正，未合併，列入 monitored）、#1477 skip（只動上游文件），詳見 docs/DECISIONS.md 同日分類表。",
+  "reviewed_pr_through": 1477,
+  "reviewed_issue_through": 1474,
+  "monitored": [
+    {
+      "item": "pr#1476",
+      "head": "6c74bfbd564054fec635600294cbd6bfe4c06ffa",
+      "state": "open"
+    }
+  ]
 }

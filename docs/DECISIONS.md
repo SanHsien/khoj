@@ -652,3 +652,12 @@ elif event_type in (ChatEvent.REFERENCES, ChatEvent.METADATA, ChatEvent.END_LLM_
 **先紅後綠**：新增 `tools/tests/test_chat_cost.py`（AST 載入產品函式，不需 Django、torch 或供應商 SDK，所以在 `dev_check` 與 CI 都會跑）。修正前 6 failed、1 passed（`test_unknown_and_local_models_cost_nothing` 是回歸護欄，新舊都過）；修正後 7 passed。產品測試 `tests/test_google_usage.py` 的期望值同步改為扣掉快取後的 input（`(8, 5, 3, 2)`），但這份測試需要完整產品環境，本輪**未執行**。未用真實金鑰呼叫任何供應商，也未啟動伺服器看 usage 事件。
 
 **依賴**：未新增依賴，`pyproject.toml`、`uv.lock` 未變動，`uv lock --check` 通過。
+
+## 2026-11-22：上游 PR #1476、#1477 分類
+
+上游 `khoj-ai/khoj` 的 `master` 仍為 `ae229ca894c0b80ad84664afcfdde523b5e87057`（無新提交）。PR 水位由 #1475 推進至 #1477；issue 無新增，維持 #1474。兩筆 2026-11-22 查皆為 OPEN、未合併、無 review，逐筆讀完整 diff；拒收條件（混淆、`eval`、長 base64、`curl | sh`、新網路端點或遙測）皆未命中。水位代表已審查，不代表採用。結果：**defer 1（列入 `monitored`）、skip 1**。
+
+| 項目 | 結論 | 理由 | 重新審查條件 |
+| --- | --- | --- | --- |
+| [#1476](https://github.com/khoj-ai/khoj/pull/1476) FilesMenu 重新掛載與過期的檔案請求 | **defer（monitored）** | 審查 head `6c74bfbd564054fec635600294cbd6bfe4c06ffa` 的完整兩檔 diff（+130/−97）。(1) `allConversations.tsx` 把定義在 `FilesMenu()` 內的 `FilesMenuCommandBox` 提到模組層並改用 props；本線同一處（第 264 行）確實是每次 render 產生新的元件身分，切換檔案過濾時 `<CommandInput>` 會被卸載重掛、搜尋字串與焦點消失。(2) `search/page.tsx` 為 `fetchFiles`／`fetchSpecificFile` 加 `AbortSignal`，effect cleanup 時中止，避免較慢的舊回應覆蓋目前的預覽或清單；只對既有的 `api/content/files`、`/api/content/file` 請求加 `signal`，沒有新端點、新依賴。判斷是範圍小、讀起來正確且與本線相關的修正（靜態閱讀，未 build、未在瀏覽器重現）。但 PR 仍 OPEN、無維護者 review，CI 只有 GitGuardian；依慣例未合併的 PR 不先行移植，本輪不 cherry-pick。已在 `tools/upstream_baseline.json` 的 `monitored` 釘住 head 與 `open` 狀態，head 變動或關閉／合併時檢查器會再報。 | 檢查器回報 `monitored` 漂移（head 變動、合併或關閉）時重讀；合併進 `master` 後隨同步進來。或本線使用者實際遇到搜尋字串被清掉／預覽被舊回應覆蓋時，先在瀏覽器重現、再以該 head 為準移植並 build 驗證。 |
+| [#1477](https://github.com/khoj-ai/khoj/pull/1477) 多語文件改建議多語 reranker | **skip** | 審查 head `0c986ceaee8f924042d99a26e36812c7455f3059`；只改 `documentation/docs/advanced/support-multilingual-docs.md` 一行（+1/−1），把 `cross_encoder` 的建議由 `mixedbread-ai/mxbai-rerank-xsmall-v1` 換成 `syntriq/lupe-multilingual-reranker-small` 或 `BAAI/bge-reranker-v2-m3`。作者自述是 Lupe 的訓練者；模型的語言數與參數量未另行查證。只動上游文件站、無程式變更，新增的只是文件裡兩個 Hugging Face 連結；沿用 #1469、#1471、#1475 只動上游文件不採用的分類。 | 上游合併進 `master` 後隨同步進來。 |
