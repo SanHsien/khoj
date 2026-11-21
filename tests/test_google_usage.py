@@ -13,7 +13,8 @@ def test_usage_token_counts_of_a_response_with_usage():
         )
     )
 
-    assert get_usage_token_counts(response) == (10, 5, 3, 2)
+    # The prompt token count includes the 2 cached tokens, so only 8 are uncached input
+    assert get_usage_token_counts(response) == (8, 5, 3, 2)
 
 
 def test_usage_token_counts_default_to_zero_for_missing_counts():

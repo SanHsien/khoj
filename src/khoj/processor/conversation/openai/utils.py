@@ -245,15 +245,11 @@ def completion_with_backoff(
         chunk = chunk.chunk
 
     # Calculate cost of chat
-    input_tokens, output_tokens, cache_read_tokens, cost = 0, 0, 0, 0
-    if hasattr(chunk, "usage") and chunk.usage:
-        input_tokens = chunk.usage.prompt_tokens
-        output_tokens = chunk.usage.completion_tokens
-        if hasattr(chunk.usage, "prompt_tokens_details") and chunk.usage.prompt_tokens_details:
-            cache_read_tokens = chunk.usage.prompt_tokens_details.cached_tokens
-        if hasattr(chunk.usage, "completion_tokens_details") and chunk.usage.completion_tokens_details:
-            output_tokens += chunk.usage.completion_tokens_details.reasoning_tokens
-        cost = chunk.usage.model_extra.get("estimated_cost", 0)  # Estimated costs returned by DeepInfra API
+    cost = 0
+    usage = chunk.usage if hasattr(chunk, "usage") else None
+    input_tokens, output_tokens, cache_read_tokens = get_chat_completion_usage_token_counts(usage)
+    if usage:
+        cost = usage.model_extra.get("estimated_cost", 0)  # Estimated costs returned by DeepInfra API
 
     tracer["usage"] = get_chat_usage_metrics(
         model_name, input_tokens, output_tokens, cache_read_tokens, usage=tracer.get("usage"), cost=cost
@@ -407,14 +403,10 @@ async def chat_completion_with_backoff(
                 yield response_chunk
 
     # Calculate cost of chat after stream finishes
-    input_tokens, output_tokens, cache_read_tokens, cost = 0, 0, 0, 0
-    if final_chunk and hasattr(final_chunk, "usage") and final_chunk.usage:
-        input_tokens = final_chunk.usage.prompt_tokens
-        output_tokens = final_chunk.usage.completion_tokens
-        if hasattr(final_chunk.usage, "prompt_tokens_details") and final_chunk.usage.prompt_tokens_details:
-            cache_read_tokens = final_chunk.usage.prompt_tokens_details.cached_tokens
-        if hasattr(final_chunk.usage, "completion_tokens_details") and final_chunk.usage.completion_tokens_details:
-            output_tokens += final_chunk.usage.completion_tokens_details.reasoning_tokens
+    cost = 0
+    usage = final_chunk.usage if final_chunk and hasattr(final_chunk, "usage") else None
+    input_tokens, output_tokens, cache_read_tokens = get_chat_completion_usage_token_counts(usage)
+    if usage:
         # Estimated costs returned by DeepInfra API
         if final_chunk.usage.model_extra and "estimated_cost" in final_chunk.usage.model_extra:
             cost = final_chunk.usage.model_extra.get("estimated_cost", 0)
@@ -686,8 +678,12 @@ async def responses_chat_completion_with_backoff(
     input_tokens = last_final.usage.input_tokens if last_final and last_final.usage else 0
     output_tokens = last_final.usage.output_tokens if last_final and last_final.usage else 0
     cost = 0
+    cache_read_tokens = 0
+    if last_final and last_final.usage and last_final.usage.input_tokens_details:
+        cache_read_tokens = last_final.usage.input_tokens_details.cached_tokens
+        input_tokens -= cache_read_tokens
     tracer["usage"] = get_chat_usage_metrics(
-        model_name, input_tokens, output_tokens, usage=tracer.get("usage"), cost=cost
+        model_name, input_tokens, output_tokens, cache_read_tokens, usage=tracer.get("usage"), cost=cost
     )
 
     # If there are tool calls, package them into aggregated text for tracing parity
@@ -722,6 +718,26 @@ async def responses_chat_completion_with_backoff(
             thoughts = tracer.pop("_responses_stream_text")
             trace_payload = thoughts
         commit_conversation_trace(messages, trace_payload, tracer)
+
+
+def get_chat_completion_usage_token_counts(usage) -> tuple[int, int, int]:
+    """Get (uncached input, output, cache read) token counts from a chat completion usage object.
+
+    Prompt tokens include cached tokens, so cached tokens are counted only as cache reads.
+    Reasoning tokens are counted as output tokens. Missing or null counts are zero.
+    """
+    if not usage:
+        return 0, 0, 0
+    input_tokens = getattr(usage, "prompt_tokens", 0) or 0
+    output_tokens = getattr(usage, "completion_tokens", 0) or 0
+    cache_read_tokens = 0
+    prompt_details = getattr(usage, "prompt_tokens_details", None)
+    if prompt_details:
+        cache_read_tokens = getattr(prompt_details, "cached_tokens", 0) or 0
+    completion_details = getattr(usage, "completion_tokens_details", None)
+    if completion_details:
+        output_tokens += getattr(completion_details, "reasoning_tokens", 0) or 0
+    return max(input_tokens - cache_read_tokens, 0), output_tokens, cache_read_tokens
 
 
 def get_structured_output_support(model_name: str, api_base_url: str = None) -> StructuredOutputSupport:

@@ -627,3 +627,28 @@ elif event_type in (ChatEvent.REFERENCES, ChatEvent.METADATA, ChatEvent.END_LLM_
 **#126 根因**：google-genai 3.x 預設改用 `httpx2`（pydantic 維護的 httpx 分支），不再是 `httpx`。(1) 契約測試只替換 `httpx` 的 transport，請求直接連外，被網路禁令擋下，造成 CI 5 項紅燈；(2) 產品 `_is_retryable_error` 只認 `httpx` 的逾時／網路例外，改版後 `httpx2` 例外不會被重試。**處置**：測試同時替換兩個後端；產品改成兩個後端的例外都重試，並加 `test_timeouts_from_every_http_backend_are_retried`（對舊碼會失敗）。
 
 **驗證**：`uv lock --check`、`tools\dev_check.ps1`（以 3.3.0 跑契約測試）通過。未用真實 API 金鑰呼叫 Gemini／Vertex，也未跑需要資料庫的產品測試。
+
+## 2026-11-21：上游 PR #1469–#1475、issue #1473–#1474 分類
+
+上游 `khoj-ai/khoj` 的 `master` 仍為 `ae229ca894c0b80ad84664afcfdde523b5e87057`（無新提交）。PR 水位由 #1465 推進至 #1475、issue 水位由 #1461 推進至 #1474；所有項目 2026-11-21 查皆為 OPEN、未合併，逐筆讀完整 diff。水位代表已審查，不代表採用。結果：**adopt 1（部分重做）、skip 5**。
+
+| 項目 | 結論 | 理由 | 重新審查條件 |
+| --- | --- | --- | --- |
+| [#1470](https://github.com/khoj-ai/khoj/pull/1470) 聊天費用的快取讀取、思考 token 與新模型 | **adopt（部分重做，不含 `llm-prices`）** | 審查 head `430ef144ca096681e06b702e32ea2f8e342f1339` 的完整七檔 diff。本線確實有這些缺陷：Gemini 的快取價格放在 `cache_read_tokens` 鍵，`get_cost_of_chat_message` 只讀 `cache_read`，快取讀取一律算 $0；Gemini 思考 token 沒有 `thought` 價格，一律 $0；`gemini-2.0-flash-lite` 輸入價寫成 0.0075（少一位）；Claude Opus 4.5 快取讀取 1.50（應為 0.50）、Haiku 4.5 快取讀寫 0.08／1.0（應為 0.10／1.25）；Gemini 與 OpenAI 相容 chat completions 的 prompt token 已含快取 token，又另計 cache read（Responses API 同步路徑本來就扣掉，兩條路徑不一致）；Gemini 串流路徑丟掉 cache read。**不採用**的部分：新增執行期依賴 `llm-prices`（PR 作者自述是該套件維護者），把價格來源交給第三方套件屬供應鏈與產品面擴大，不符本線「只採用能在本機驗證的缺陷修正」；新模型（gpt-5.1、claude-sonnet-4-6 等）因此仍算 $0，與現況相同。費用只進 usage 事件、`chat_metadata` 與日誌，不影響計費或限流。 | 上游合併 #1470 後隨同步對照，本線的 `get_chat_completion_usage_token_counts` 與價格表會衝突，以上游為準重新評估；或本線需要新模型的費用數字時再考慮補價格表。 |
+| [#1469](https://github.com/khoj-ai/khoj/pull/1469) Ollama 文件連結 | **skip** | 只改 `documentation/docs/advanced/ollama.mdx` 一個外部連結（+1/−1）。`documentation/` 是上游部署的產品文件站，本線「行為變更才動」，沿用 #1448、#1449 只動上游文件不採用的分類。 | 上游合併進 `master` 後隨同步進來。 |
+| [#1471](https://github.com/khoj-ai/khoj/pull/1471) 隱私頁錯字與遙測程式連結 | **skip** | 只改 `documentation/docs/get-started/privacy-security.md`（+2/−2：錯字與 `helpers.py` 行號錨點），理由同 #1469。 | 同上。 |
+| [#1475](https://github.com/khoj-ai/khoj/pull/1475) Rapid-MLX 設定文件 | **skip** | 新增 `documentation/docs/advanced/rapid-mlx.md`（+51）與 `use-openai-proxy.md` 一個連結；只適用 Apple Silicon，作者自述是 Rapid-MLX 維護者，本線是 Windows-first、不維護文件站。走現有 OpenAI 相容路徑，無程式變更。 | 上游合併進 `master` 後隨同步進來。 |
+| issue [#1474](https://github.com/khoj-ai/khoj/issues/1474) Rapid-MLX 設定文件提案 | **skip** | #1475 的提案 issue，無程式變更，處置同 #1475。 | 同 #1475。 |
+| issue [#1473](https://github.com/khoj-ai/khoj/issues/1473) Webz.io 新聞搜尋 | **skip** | 新增需 `WEBZ_API_TOKEN` 的第三方搜尋服務的功能請求，沒有附程式；沿用 #1465 與 2026-09-30 對第三方服務整合不採用的分類。 | 上游出現實作並合併進 `master`，或本線明確需要新聞搜尋並具備金鑰、資料傳送範圍與配額驗收條件時。 |
+
+### #1470 的本線重做
+
+- `utils/constants.py`：Gemini 三筆快取價格改用 `cache_read` 鍵；`gemini-2.0-flash-lite` 輸入 0.075；Opus 4.5 快取讀取 0.50、Haiku 4.5 快取讀寫 0.10／1.25（與 PR 測試引用的供應商價目一致）。
+- `utils/helpers.py`：`thought` 沒有獨立價格時以 `output` 價格計（只有 Gemini 轉接層傳 `thought_tokens`；OpenAI 已把 reasoning token 併入 output、Anthropic 不傳，所以不會重算）。
+- `google/utils.py`：`get_usage_token_counts` 回傳的 input 扣掉 `cached_content_token_count`；串流路徑把 cache read 傳進費用計算。
+- `openai/utils.py`：新增 `get_chat_completion_usage_token_counts`，兩條 chat completions 路徑共用（input 扣掉快取、`cached_tokens`／`reasoning_tokens` 為 null 時當 0）。PR 是在兩處各自 inline 修改；本線抽成函式是為了能在維護 gate 裡測，這是與上游的寫法差異。
+- 本線額外發現並一起修（不是 PR 內容）：Responses API 串流路徑 `responses_chat_completion_with_backoff` 完全沒算 cache read，改成與同步路徑相同（扣掉 `input_tokens_details.cached_tokens` 並傳入）。這段沒有單元測試，只有 `py_compile` 與 ruff。
+
+**先紅後綠**：新增 `tools/tests/test_chat_cost.py`（AST 載入產品函式，不需 Django、torch 或供應商 SDK，所以在 `dev_check` 與 CI 都會跑）。修正前 6 failed、1 passed（`test_unknown_and_local_models_cost_nothing` 是回歸護欄，新舊都過）；修正後 7 passed。產品測試 `tests/test_google_usage.py` 的期望值同步改為扣掉快取後的 input（`(8, 5, 3, 2)`），但這份測試需要完整產品環境，本輪**未執行**。未用真實金鑰呼叫任何供應商，也未啟動伺服器看 usage 事件。
+
+**依賴**：未新增依賴，`pyproject.toml`、`uv.lock` 未變動，`uv lock --check` 通過。

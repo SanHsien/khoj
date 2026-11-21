@@ -34,7 +34,7 @@
 產品程式（`src/khoj`、客戶端、上游 `test.yml`）以上游為準，除非 `REVIEW.md`／`docs/DECISIONS.md` 已記錄 fork overlay。目前 overlay：Compose 硬化、UI-TARS `ast.literal_eval`、operator 本機指令不走 shell flag、移除上游收費服務導流（2026-09-19）、
 日誌注入防護（`khoj.utils.security.sanitize_log_value`，另有一份刻意內嵌在 `src/telemetry/telemetry.py`，因為遙測映像只含該目錄）、
 `is_groq_api` 改比對完整主機名、寄信模板開 Jinja autoescape（自動化結果 `result` 例外，已是 HTML）、
-PDF／DOCX 暫存檔先關檔再讀（Windows）、Google 圖片生成依模型名分流（非 `imagen*` 走 `generate_content`；`imagen*` 只在 Vertex 用戶端呼叫 `generate_images`，API 金鑰模式明確報錯；預設圖片模型改 `gemini-2.5-flash-image`，見 `docs/DECISIONS.md` 2026-11-09）、以及 `docs/DECISIONS.md` 記錄的已採用上游 PR。同步上游時這些位置會衝突，以本線為準。
+PDF／DOCX 暫存檔先關檔再讀（Windows）、Google 圖片生成依模型名分流（非 `imagen*` 走 `generate_content`；`imagen*` 只在 Vertex 用戶端呼叫 `generate_images`，API 金鑰模式明確報錯；預設圖片模型改 `gemini-2.5-flash-image`，見 `docs/DECISIONS.md` 2026-11-09）、聊天費用計算（上游 #1470 不含 `llm-prices` 的本線重做：價格表修正、input 扣掉快取 token、OpenAI 用量抽成 `get_chat_completion_usage_token_counts`，見 `docs/DECISIONS.md` 2026-11-21）、以及 `docs/DECISIONS.md` 記錄的已採用上游 PR。同步上游時這些位置會衝突，以本線為準。
 
 ## 分支與 remote
 

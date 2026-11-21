@@ -392,9 +392,14 @@ async def gemini_chat_completion_with_backoff(
                 aggregated_response += part.text
                 yield ResponseWithThought(text=part.text)
     # Calculate cost of chat
-    input_tokens, output_tokens, thought_tokens, _ = get_usage_token_counts(final_chunk)
+    input_tokens, output_tokens, thought_tokens, cache_read_tokens = get_usage_token_counts(final_chunk)
     tracer["usage"] = get_chat_usage_metrics(
-        model_name, input_tokens, output_tokens, thought_tokens=thought_tokens, usage=tracer.get("usage")
+        model_name,
+        input_tokens,
+        output_tokens,
+        cache_read_tokens=cache_read_tokens,
+        thought_tokens=thought_tokens,
+        usage=tracer.get("usage"),
     )
 
     # Validate the response. If empty, raise an error to retry.
@@ -420,11 +425,14 @@ def get_usage_token_counts(response: gtypes.GenerateContentResponse | None) -> t
     usage = getattr(response, "usage_metadata", None)
     if usage is None:
         return 0, 0, 0, 0
+    cache_read_tokens = usage.cached_content_token_count or 0
+    # The prompt token count includes cached tokens. Count only uncached tokens as input
+    input_tokens = max((usage.prompt_token_count or 0) - cache_read_tokens, 0)
     return (
-        usage.prompt_token_count or 0,
+        input_tokens,
         usage.candidates_token_count or 0,
         usage.thoughts_token_count or 0,
-        usage.cached_content_token_count or 0,
+        cache_read_tokens,
     )
 
 

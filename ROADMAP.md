@@ -9,9 +9,7 @@
 2026-11-08 更新：維護者已授權決策，Dependabot 告警 #367（`deepmerge`）決定以 `tolerable_risk` dismiss（無修補版且僅為文件站建置期依賴，見 `docs/DECISIONS.md` 2026-10-28 條目最終決定；待外部執行 patch 指令）；open Dependabot alert 0 筆（待 patch 落地），code scanning 0 筆。近期項目已全數清空。
 
 ## 近期：可以直接動手
-| 項目 | 為什麼 | 驗收方式 | 建議執行者 | 證據 |
-| --- | --- | --- | --- | --- |
-| 審上游新變更 | 觸發條件已成立（2026-11-21 查：`python tools/check_upstream_updates.py --strict` exit 1：新 PR #1469、#1470、#1471、#1475 與新 issue #1473、#1474 待分流；`Upstream check` 2026-11-20 failure）。原條件：`Upstream check` workflow 失敗（`--strict` exit 1＝有未審 commit／PR／issue；exit 2＝檢查本身沒跑成） | 照 [`docs/UPSTREAM.md`](docs/UPSTREAM.md)「審查清冊」逐筆讀 diff，`docs/DECISIONS.md` 記結論，推進 `tools/upstream_baseline.json` 的 `reviewed_through`／`reviewed_pr_through`／`reviewed_issue_through`；下一次 `Upstream check` success | Claude Sonnet | `tools/upstream_baseline.json`（審到 `ae229ca`、PR #1465、issue #1461）；`.github/workflows/upstream-check.yml` |
+目前沒有。上游審查於 2026-11-21 完成（PR 審到 #1475、issue 審到 #1474，見 [`docs/DECISIONS.md`](docs/DECISIONS.md) 同日條目）；下次 `Upstream check` 失敗時再加回。
 
 ## 中期：等條件成立再做
 | 項目 | 觸發條件 | 驗收方式 | 建議執行者 | 證據 |

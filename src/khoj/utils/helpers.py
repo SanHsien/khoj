@@ -973,7 +973,9 @@ def get_cost_of_chat_message(
     # Calculate cost of input and output tokens. Costs are per million tokens
     input_cost = constants.model_to_cost.get(model_name, {}).get("input", 0) * (input_tokens / 1e6)
     output_cost = constants.model_to_cost.get(model_name, {}).get("output", 0) * (output_tokens / 1e6)
-    thought_cost = constants.model_to_cost.get(model_name, {}).get("thought", 0) * (thought_tokens / 1e6)
+    # Thinking tokens are billed at the output price unless a model lists its own thought price
+    model_cost = constants.model_to_cost.get(model_name, {})
+    thought_cost = model_cost.get("thought", model_cost.get("output", 0)) * (thought_tokens / 1e6)
     cache_read_cost = constants.model_to_cost.get(model_name, {}).get("cache_read", 0) * (cache_read_tokens / 1e6)
     cache_write_cost = constants.model_to_cost.get(model_name, {}).get("cache_write", 0) * (cache_write_tokens / 1e6)
 
