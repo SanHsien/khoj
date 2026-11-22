@@ -671,3 +671,21 @@ elif event_type in (ChatEvent.REFERENCES, ChatEvent.METADATA, ChatEvent.END_LLM_
 **刻意不做**：不回貢上游（FORK.md 回貢需當次對話同意）。`KHOJ_DOMAIN` 未設時只接受 loopback，與 `settings.py` 預設 `khoj.dev` 不同，因為沒設網域的部署只能從本機或用 IP／別名連入，要別名請設 `KHOJ_TRUSTED_HOSTS`。
 
 **測試**：`tools/tests/test_trusted_hosts.py`（壞 Host 400、好 Host 200、lookalike 400、docker 服務名、IP 網域、`*`、`main.py` 接線）；`install_contract_deps.py` 新增 `fastapi` 讓 gate 與 CI 有 Starlette。**重新審查條件**：Starlette 的 Host 解析行為變動，或上游加入自己的 Host 檢查。
+
+## 2026-11-22：Anthropic 請求面跟上現行 Claude 模型、預設模型換掉已退役的兩個
+
+**問題**：首次啟動種入的 `claude-sonnet-4-0`（＝`claude-sonnet-4-20250514`，2026-06-15 退役）與 `claude-3-5-haiku-latest`（2026-02-19 退役）都會回 404。使用者改選現行模型時，`anthropic/utils.py` 每次都送 `temperature`，開 deepthought 時送 `thinking.budget_tokens`（`REASONING_MODELS` 的 `claude-opus-4` 前綴也匹配 `claude-opus-4-7`／`4-8`），`json_object` 還會 prefill 一個 `{`，三者在 Opus 4.7+／Claude 5.x 都回 400。依據：Anthropic 模型遷移指南 `shared/model-migration.md` 的「Retired Model Replacements」、「Migrating to Opus 4.7 → Breaking changes」、「Migrating to Claude Haiku 5.5 → Breaking change 1–3」、「Migrating to Claude Sonnet 5 → Breaking changes」與「Migrating to the 4.6 family → Assistant-turn prefills return 400」（Opus 4.6／Sonnet 4.6 已拒收 prefill）。
+
+**做法**（fork overlay，上游檔）：
+
+- `utils/constants.py` 預設改 `claude-sonnet-5-5`、`claude-haiku-5-5`。已種入資料庫的舊列不動，管理員要自己改。
+- `anthropic/utils.py` 新增 `is_adaptive_thinking_model`（Opus 4.7／4.8 與所有 Claude 5.x）：這些模型不送 `temperature`、deepthought 改送 `{"type": "adaptive"}`、`max_tokens` 加上原有的 reasoning 額度（思考也算進上限）。新增 `rejects_assistant_prefill`（上述模型加 Opus 4.6／Sonnet 4.6）：這些模型的 `json_object` 不再 prefill `{`。舊模型的行為（budget、`temperature=1.0`、context-management beta、prefill）原樣保留。
+
+**刻意不做**：
+
+- `processor/operator/operator_agent_anthropic.py`（operator computer use）只記不改：它送 `thinking={"type":"disabled"}`、`budget_tokens: 1024`、`temperature`，工具版本表只到 `claude-*-4`，5.x 模型在 `model_default_tool` 直接 `ValueError`；Opus 5.5 拒收 `disabled` 與 `computer_20251124`，要改用 `computer_toolset_20260801`，agent loop 也得改成依 `tool_use.name` 分派（指南「Migrating to Claude Opus 5.5 → Breaking change 1、4」）。這是改 agent loop 的重做，留在 `ROADMAP.md`。
+- `model_to_cost`、`model_to_prompt_size` 沒有新模型的列（成本記成 0、prompt 大小走預設），本輪不補。
+- 無 schema 的 `json_object` 呼叫改用 `output_config.format` 未做；現行模型上這幾支不再有 prefill 保證，靠 prompt 與既有的 JSON 清理。
+- 不回貢上游（FORK.md：回貢需維護者當次對話同意）。
+
+**測試**：`tools/tests/test_anthropic_request_shape.py`（AST 載入產品函式、假 client 記錄請求：現行模型不帶 temperature／budget／prefill、4.6 不 prefill、舊模型保留 budget 與 `temperature=1.0` 與 prefill、預設模型不在退役清單）。沒有真實 API key，**未實呼叫 API**。**重新審查條件**：上游自己改 Anthropic 請求面、或 Anthropic 再改 sampling／thinking 規則。

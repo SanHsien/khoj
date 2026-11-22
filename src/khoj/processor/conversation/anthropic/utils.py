@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from copy import deepcopy
 from time import perf_counter
 from typing import AsyncGenerator, Dict, List
@@ -40,6 +41,12 @@ anthropic_async_clients: Dict[str, anthropic.AsyncAnthropic | anthropic.AsyncAnt
 DEFAULT_MAX_TOKENS_ANTHROPIC = 8000
 MAX_REASONING_TOKENS_ANTHROPIC = 12000
 REASONING_MODELS = ["claude-3-7", "claude-sonnet-4", "claude-opus-4", "claude-haiku-4"]
+# Claude Opus 4.7+ and every Claude 5.x model: manual thinking budgets, non-default sampling
+# parameters and assistant prefill all return a 400. Thinking is adaptive; it counts toward max_tokens.
+ADAPTIVE_THINKING_MODEL_PATTERN = re.compile(r"claude-(?:opus-4-[78]|(?:opus|sonnet|haiku|fable|mythos)-5)")
+# Claude Opus 4.6 and Sonnet 4.6 also reject a final assistant prefill with a 400, though they still take
+# temperature and thinking budgets.
+PREFILL_REJECTED_MODEL_PATTERN = re.compile(r"claude-(?:opus|sonnet)-4-6")
 
 
 @retry(
@@ -91,7 +98,11 @@ def anthropic_completion_with_backoff(
         model_kwargs["tools"] = [
             anthropic.types.ToolParam(name=tool.name, description=tool.description, input_schema=tool.schema)
         ]
-    elif response_type == "json_object" and not (is_reasoning_model(model_name) and deepthought):
+    elif (
+        response_type == "json_object"
+        and not rejects_assistant_prefill(model_name)
+        and not (is_reasoning_model(model_name) and deepthought)
+    ):
         # Prefill model response with '{' to make it output a valid JSON object. Not supported with extended thinking.
         formatted_messages.append(anthropic.types.MessageParam(role="assistant", content="{"))
         aggregated_response += "{"
@@ -100,18 +111,25 @@ def anthropic_completion_with_backoff(
         model_kwargs["system"] = system
 
     max_tokens = max_tokens or DEFAULT_MAX_TOKENS_ANTHROPIC
-    if deepthought and is_reasoning_model(model_name):
+    sampling_kwargs = {"temperature": temperature}
+    if is_adaptive_thinking_model(model_name):
+        sampling_kwargs = {}
+        max_tokens += MAX_REASONING_TOKENS_ANTHROPIC
+        if deepthought:
+            model_kwargs["thinking"] = {"type": "adaptive"}
+    elif deepthought and is_reasoning_model(model_name):
         model_kwargs["thinking"] = {"type": "enabled", "budget_tokens": MAX_REASONING_TOKENS_ANTHROPIC}
         model_kwargs["betas"] = ["context-management-2025-06-27"]
         model_kwargs["context_management"] = {"edits": [{"type": "clear_thinking_20251015", "keep": "all"}]}
         max_tokens += MAX_REASONING_TOKENS_ANTHROPIC
         # Temperature control not supported when using extended thinking
         temperature = 1.0
+        sampling_kwargs = {"temperature": temperature}
 
     with client.beta.messages.stream(
         messages=formatted_messages,
         model=model_name,  # type: ignore
-        temperature=temperature,
+        **sampling_kwargs,
         timeout=20,
         max_tokens=max_tokens,
         **(model_kwargs),
@@ -199,11 +217,18 @@ async def anthropic_chat_completion_with_backoff(
 
     model_kwargs = model_kwargs or dict()
     max_tokens = DEFAULT_MAX_TOKENS_ANTHROPIC
-    if deepthought and is_reasoning_model(model_name):
+    sampling_kwargs = {"temperature": temperature}
+    if is_adaptive_thinking_model(model_name):
+        sampling_kwargs = {}
+        max_tokens += MAX_REASONING_TOKENS_ANTHROPIC
+        if deepthought:
+            model_kwargs["thinking"] = {"type": "adaptive"}
+    elif deepthought and is_reasoning_model(model_name):
         model_kwargs["thinking"] = {"type": "enabled", "budget_tokens": MAX_REASONING_TOKENS_ANTHROPIC}
         max_tokens += MAX_REASONING_TOKENS_ANTHROPIC
         # Temperature control not supported when using extended thinking
         temperature = 1.0
+        sampling_kwargs = {"temperature": temperature}
 
     formatted_messages, system = format_messages_for_anthropic(messages, system_prompt)
 
@@ -214,7 +239,7 @@ async def anthropic_chat_completion_with_backoff(
     async with client.messages.stream(
         messages=formatted_messages,
         model=model_name,  # type: ignore
-        temperature=temperature,
+        **sampling_kwargs,
         system=system,
         timeout=20,
         max_tokens=max_tokens,
@@ -390,3 +415,13 @@ def format_messages_for_anthropic(raw_messages: list[ChatMessage], system_prompt
 
 def is_reasoning_model(model_name: str) -> bool:
     return any(model_name.startswith(model) for model in REASONING_MODELS)
+
+
+def is_adaptive_thinking_model(model_name: str | None) -> bool:
+    return bool(model_name) and ADAPTIVE_THINKING_MODEL_PATTERN.search(model_name) is not None
+
+
+def rejects_assistant_prefill(model_name: str | None) -> bool:
+    return is_adaptive_thinking_model(model_name) or (
+        bool(model_name) and PREFILL_REJECTED_MODEL_PATTERN.search(model_name) is not None
+    )

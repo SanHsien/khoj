@@ -35,7 +35,7 @@
 FastAPI 的 Host 標頭檢查防 DNS rebinding（`src/khoj/main.py` 加 `TrustedHostMiddleware`，主機清單由 `khoj.utils.security.trusted_hosts` 依 `KHOJ_DOMAIN`／`KHOJ_ALLOWED_DOMAIN`／`KHOJ_TRUSTED_HOSTS` 產生，見 `docs/DECISIONS.md` 2026-11-22）、
 日誌注入防護（`khoj.utils.security.sanitize_log_value`，另有一份刻意內嵌在 `src/telemetry/telemetry.py`，因為遙測映像只含該目錄）、
 `is_groq_api` 改比對完整主機名、寄信模板開 Jinja autoescape（自動化結果 `result` 例外，已是 HTML）、
-PDF／DOCX 暫存檔先關檔再讀（Windows）、Google 圖片生成依模型名分流（非 `imagen*` 走 `generate_content`；`imagen*` 只在 Vertex 用戶端呼叫 `generate_images`，API 金鑰模式明確報錯；預設圖片模型改 `gemini-2.5-flash-image`，見 `docs/DECISIONS.md` 2026-11-09）、聊天費用計算（上游 #1470 不含 `llm-prices` 的本線重做：價格表修正、input 扣掉快取 token、OpenAI 用量抽成 `get_chat_completion_usage_token_counts`，見 `docs/DECISIONS.md` 2026-11-21）、以及 `docs/DECISIONS.md` 記錄的已採用上游 PR。同步上游時這些位置會衝突，以本線為準。
+PDF／DOCX 暫存檔先關檔再讀（Windows）、Google 圖片生成依模型名分流（非 `imagen*` 走 `generate_content`；`imagen*` 只在 Vertex 用戶端呼叫 `generate_images`，API 金鑰模式明確報錯；預設圖片模型改 `gemini-2.5-flash-image`，見 `docs/DECISIONS.md` 2026-11-09）、聊天費用計算（上游 #1470 不含 `llm-prices` 的本線重做：價格表修正、input 扣掉快取 token、OpenAI 用量抽成 `get_chat_completion_usage_token_counts`，見 `docs/DECISIONS.md` 2026-11-21）、Anthropic 請求面跟上現行 Claude 模型（`anthropic/utils.py` 對 Opus 4.7+／Claude 5.x 不送 `temperature`、budget 與 prefill，預設模型換 `claude-sonnet-5-5`／`claude-haiku-5-5`，見 `docs/DECISIONS.md` 2026-11-22）、以及 `docs/DECISIONS.md` 記錄的已採用上游 PR。同步上游時這些位置會衝突，以本線為準。
 
 ## 分支與 remote
 
