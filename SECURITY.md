@@ -18,6 +18,7 @@
 ## 特別注意
 
 - Khoj 會索引本機文件。不要把真實筆記、客戶文件或憑證提交進 repo。
+- `--anonymous-mode` 沒有任何登入：能連到埠的人（含你瀏覽器裡透過 DNS rebinding 把自己網域指到 127.0.0.1 的網頁）就能讀寫全部資料並消耗模型額度。只在本機單人使用，不要搭配公開網域或對區網開放。本 fork 的 FastAPI 會檢查 Host 標頭，只接受 `localhost`、`127.0.0.1`、`[::1]`、`KHOJ_DOMAIN`／`KHOJ_ALLOWED_DOMAIN`（含子網域）與 `KHOJ_TRUSTED_HOSTS`（逗號分隔的額外主機；`*` 關閉檢查），其餘回 400。這只擋 rebinding，不取代登入。
 - 本 fork 的 `docker-compose.yml` 把 `42110` 綁在 `127.0.0.1`、關掉 `--anonymous-mode`、預設 `KHOJ_TELEMETRY_DISABLE=True`。computer 服務要 `--profile operator` 才會啟動，VNC `5900` 也只綁 loopback。
 - 檔裡仍有範例管理員密碼與 `KHOJ_DJANGO_SECRET_KEY=secret`。本機試用可以；把埠改成對區網或網際網路開放前必須換成自己的值。
 - Django／Session 的程式 fallback secret 仍是 `!secret`（見 `src/khoj/app/settings.py`）。from-source 未設環境變數時不要當成正式密鑰。

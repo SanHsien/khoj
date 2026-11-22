@@ -661,3 +661,13 @@ elif event_type in (ChatEvent.REFERENCES, ChatEvent.METADATA, ChatEvent.END_LLM_
 | --- | --- | --- | --- |
 | [#1476](https://github.com/khoj-ai/khoj/pull/1476) FilesMenu 重新掛載與過期的檔案請求 | **defer（monitored）** | 審查 head `6c74bfbd564054fec635600294cbd6bfe4c06ffa` 的完整兩檔 diff（+130/−97）。(1) `allConversations.tsx` 把定義在 `FilesMenu()` 內的 `FilesMenuCommandBox` 提到模組層並改用 props；本線同一處（第 264 行）確實是每次 render 產生新的元件身分，切換檔案過濾時 `<CommandInput>` 會被卸載重掛、搜尋字串與焦點消失。(2) `search/page.tsx` 為 `fetchFiles`／`fetchSpecificFile` 加 `AbortSignal`，effect cleanup 時中止，避免較慢的舊回應覆蓋目前的預覽或清單；只對既有的 `api/content/files`、`/api/content/file` 請求加 `signal`，沒有新端點、新依賴。判斷是範圍小、讀起來正確且與本線相關的修正（靜態閱讀，未 build、未在瀏覽器重現）。但 PR 仍 OPEN、無維護者 review，CI 只有 GitGuardian；依慣例未合併的 PR 不先行移植，本輪不 cherry-pick。已在 `tools/upstream_baseline.json` 的 `monitored` 釘住 head 與 `open` 狀態，head 變動或關閉／合併時檢查器會再報。 | 檢查器回報 `monitored` 漂移（head 變動、合併或關閉）時重讀；合併進 `master` 後隨同步進來。或本線使用者實際遇到搜尋字串被清掉／預覽被舊回應覆蓋時，先在瀏覽器重現、再以該 head 為準移植並 build 驗證。 |
 | [#1477](https://github.com/khoj-ai/khoj/pull/1477) 多語文件改建議多語 reranker | **skip** | 審查 head `0c986ceaee8f924042d99a26e36812c7455f3059`；只改 `documentation/docs/advanced/support-multilingual-docs.md` 一行（+1/−1），把 `cross_encoder` 的建議由 `mixedbread-ai/mxbai-rerank-xsmall-v1` 換成 `syntriq/lupe-multilingual-reranker-small` 或 `BAAI/bge-reranker-v2-m3`。作者自述是 Lupe 的訓練者；模型的語言數與參數量未另行查證。只動上游文件站、無程式變更，新增的只是文件裡兩個 Hugging Face 連結；沿用 #1469、#1471、#1475 只動上游文件不採用的分類。 | 上游合併進 `master` 後隨同步進來。 |
+
+## 2026-11-22：FastAPI 加 Host 標頭檢查（防 DNS rebinding）
+
+**問題**：FastAPI（埠 42110）沒有 Host 檢查，Django 的 `ALLOWED_HOSTS` 只管 Django 那一半。`--anonymous-mode` 沒有登入，DNS rebinding 網頁可讀寫全部資料並耗用模型額度；預設需登入時風險低。本線 Compose 已關匿名模式。
+
+**做法**：`main.py` 最外層加 Starlette `TrustedHostMiddleware`（`www_redirect=False`）。主機清單在 `khoj/utils/security.py::trusted_hosts`：loopback 三名、`testserver`（TestClient 用，不是可解析名稱，rebinding 頁送不出）、`KHOJ_DOMAIN` 與 `KHOJ_ALLOWED_DOMAIN`（未設則同 `KHOJ_DOMAIN`）各加其子網域（與 Django 的 `.domain` 一致）、`KHOJ_TRUSTED_HOSTS` 額外項（`*` 關閉）。
+
+**刻意不做**：不回貢上游（FORK.md 回貢需當次對話同意）。`KHOJ_DOMAIN` 未設時只接受 loopback，與 `settings.py` 預設 `khoj.dev` 不同，因為沒設網域的部署只能從本機或用 IP／別名連入，要別名請設 `KHOJ_TRUSTED_HOSTS`。
+
+**測試**：`tools/tests/test_trusted_hosts.py`（壞 Host 400、好 Host 200、lookalike 400、docker 服務名、IP 網域、`*`、`main.py` 接線）；`install_contract_deps.py` 新增 `fastapi` 讓 gate 與 CI 有 Starlette。**重新審查條件**：Starlette 的 Host 解析行為變動，或上游加入自己的 Host 檢查。

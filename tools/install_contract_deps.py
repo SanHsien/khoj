@@ -20,7 +20,7 @@ from pathlib import Path
 PYPROJECT = Path(__file__).resolve().parents[1] / "pyproject.toml"
 
 # Product dependencies the contract test imports (directly or through the SDK).
-CONTRACT_PACKAGES = ("google-genai", "google-auth", "httpx", "pillow")
+CONTRACT_PACKAGES = ("google-genai", "google-auth", "httpx", "pillow", "fastapi")
 
 _DEPENDENCY_LINE = re.compile(r'^\s*"(?P<spec>(?P<name>[A-Za-z0-9_.-]+)[^"]*)",?\s*(#.*)?$')
 

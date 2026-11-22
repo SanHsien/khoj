@@ -16,6 +16,7 @@ import warnings
 from importlib.metadata import version
 
 from khoj.utils.helpers import in_debug_mode, is_env_var_true
+from khoj.utils.security import trusted_hosts
 
 # Ignore non-actionable warnings
 warnings.filterwarnings("ignore", message=r"snapshot_download.py has been made private", category=FutureWarning)
@@ -28,6 +29,7 @@ import django
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
 import schedule
 
@@ -86,6 +88,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Added last so it is outermost and runs before CORS: a request whose Host header is not
+# ours gets 400 first. Blocks DNS rebinding, which matters most with --anonymous-mode
+# because there is no login to stop a rebound page.
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=trusted_hosts(os.environ), www_redirect=False)
 
 # Set Locale
 locale.setlocale(locale.LC_ALL, "")

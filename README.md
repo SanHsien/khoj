@@ -65,7 +65,7 @@ docker compose up -d
 - KHOJ_DEFAULT_CHAT_MODEL=qwen3
 ```
 
-並把 `KHOJ_ADMIN_EMAIL` / `KHOJ_ADMIN_PASSWORD` / `KHOJ_DJANGO_SECRET_KEY` 改成自己的值。本 fork 的 Compose 把 `42110` 綁在 `127.0.0.1`、關掉 `--anonymous-mode`、預設 `KHOJ_TELEMETRY_DISABLE=True`。computer／VNC 服務要 `docker compose --profile operator up` 才會起來。若要把埠對區網或網際網路開放，先改密鑰再改 port mapping。
+並把 `KHOJ_ADMIN_EMAIL` / `KHOJ_ADMIN_PASSWORD` / `KHOJ_DJANGO_SECRET_KEY` 改成自己的值。本 fork 的 Compose 把 `42110` 綁在 `127.0.0.1`、關掉 `--anonymous-mode`、預設 `KHOJ_TELEMETRY_DISABLE=True`。computer／VNC 服務要 `docker compose --profile operator up` 才會起來。若要把埠對區網或網際網路開放，先改密鑰再改 port mapping。`--anonymous-mode` 沒有登入，只適合本機單人；伺服器只接受 `localhost`、`127.0.0.1`、`[::1]` 與 `KHOJ_DOMAIN`／`KHOJ_ALLOWED_DOMAIN` 這幾個 Host（防 DNS rebinding，其餘回 400），細節見 [`SECURITY.md`](SECURITY.md)。
 
 完整選項見上游 [Self-Host 文件](https://docs.khoj.dev/get-started/setup) 與 [`docker-compose.yml`](docker-compose.yml)。
 
