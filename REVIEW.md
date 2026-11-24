@@ -65,6 +65,7 @@ pwsh -NoProfile -File tools\dev_check.ps1
 | R-07 | P2 | UI-TARS box 解析改 `ast.literal_eval`；operator 本機指令改 `["bash", "-c", command]`，不再設 shell flag |
 | R-08 | P3 | `test.yml`、`pre-commit.yml`、`build_khoj_el.yml`、`test_khoj_el.yml` 加上 `github.repository == 'khoj-ai/khoj'` |
 | R-10 | P3 | computer 服務加 `profiles: [operator]`；VNC 綁 `127.0.0.1:5900` |
+| R-13 | P3 | 2026-11-24：測試重現 Anthropic usage 缺少 cache 欄位時，同步／串流對話與 operator 都會拋 `AttributeError`；`e9ad54a7` 改為缺欄位視為 0，並以 `test_sync_cache_token_totals`、`test_stream_cache_token_totals`、`test_operator_cache_token_totals` 各 16 組測試鎖定缺欄位、`None`、0、正整數及既有用量累加 |
 
 ## 接受、不改契約
 
