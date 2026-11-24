@@ -450,8 +450,8 @@ class AnthropicOperatorAgent(OperatorAgent):
             self._update_usage(
                 response.usage.input_tokens,
                 response.usage.output_tokens,
-                response.usage.cache_read_input_tokens or 0,
-                response.usage.cache_creation_input_tokens or 0,
+                getattr(response.usage, "cache_read_input_tokens", 0) or 0,
+                getattr(response.usage, "cache_creation_input_tokens", 0) or 0,
             )
         self.tracer["temperature"] = temperature
         return response_content
